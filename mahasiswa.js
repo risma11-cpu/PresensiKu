@@ -78,6 +78,11 @@ async function init() {
 
     setInterval(loadActiveSesi, AUTO_REFRESH_MS);
     setInterval(loadTodayStatus, AUTO_REFRESH_MS);
+
+    // Segarkan status sesi begitu tab/HP kembali dibuka (sesi bisa saja sudah ditutup admin)
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) { loadActiveSesi(); loadTodayStatus(); }
+    });
 }
 
 function renderProfile(u) {
@@ -90,7 +95,7 @@ function renderProfile(u) {
     document.getElementById('pEmail').textContent = u.email || '-';
     const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setT('userEmail', u.email || '-');
-    const _av = document.getElementById('topAvatar'); if (_av) _av.innerHTML = avatarMahasiswaImg(u.nim, u.nama);
+    setT('topAvatar', ((u.nama || 'M').trim()[0] || 'M').toUpperCase());
     setT('mStatKelas', u.kelas || '-');
     setT('mStatJurusan', u.jurusan || '-');
 }
@@ -156,6 +161,8 @@ async function loadActiveSesi() {
 
 function renderSesiCard() {
     const sesi = MState.sesiAktif;
+    const manual = document.getElementById('manualCode');
+    if (manual) manual.style.display = sesi ? 'block' : 'none';
     if (!sesi) {
         MDOM.sesiCard.className = 'sesi-card kosong';
         MDOM.sesiCard.innerHTML = '<i class="fas fa-circle-info"></i> Belum ada sesi presensi aktif saat ini.';
@@ -177,9 +184,39 @@ function renderSesiCard() {
 // ================================================================
 // SCAN QR SESI -> PRESENSI
 // ================================================================
+// Ambil teks error dari Error / string / objek (library scanner menolak dengan string)
+function errMsg(e) {
+    if (!e) return 'Tidak diketahui';
+    if (typeof e === 'string') return e;
+    return e.message || e.name || String(e);
+}
+
+function camErr(e) {
+    const s = errMsg(e);
+    if (/NotAllowed|Permission|denied/i.test(s)) return 'Izin kamera ditolak. Izinkan akses kamera di browser lalu coba lagi.';
+    if (/NotFound|device not found/i.test(s)) return 'Kamera tidak ditemukan di perangkat ini.';
+    if (/NotReadable|in use|Could not start/i.test(s)) return 'Kamera sedang dipakai aplikasi lain.';
+    return s;
+}
+
+function focusKodeManual() {
+    const el = document.getElementById('kodeSesiInput');
+    if (el) el.focus();
+}
+
 function startSesiScan() {
     if (!MState.sesiAktif) {
         showStatus('Tidak ada sesi presensi aktif', 'warning');
+        return;
+    }
+    if (typeof Html5Qrcode === 'undefined') {
+        showStatus('Library scanner gagal dimuat (cek koneksi internet). Pakai kode sesi manual.', 'warning', 8000);
+        focusKodeManual();
+        return;
+    }
+    if (!window.isSecureContext || !navigator.mediaDevices) {
+        showStatus('Kamera hanya bisa dipakai lewat HTTPS atau localhost. Pakai kode sesi manual di bawah.', 'warning', 9000);
+        focusKodeManual();
         return;
     }
     MDOM.scannerArea.style.display = 'block';
@@ -205,14 +242,25 @@ function startSesiScan() {
                 MState.html5QrCode.start({ facingMode: 'user' }, config, onSesiScanSuccess, () => {})
                     .then(() => { MState.scannerRunning = true; })
                     .catch((err2) => {
-                        showStatus('Gagal akses kamera: ' + err2.message, 'error');
+                        showStatus('Gagal akses kamera: ' + camErr(err2) + ' Kamu bisa pakai kode sesi manual.', 'error', 8000);
                         cancelSesiScan();
                     });
             });
     } catch (error) {
-        showStatus('Gagal inisialisasi scanner', 'error');
+        showStatus('Gagal inisialisasi scanner: ' + errMsg(error), 'error');
         cancelSesiScan();
     }
+}
+
+// Presensi lewat kode sesi yang diketik (cadangan kalau kamera tidak bisa dipakai)
+async function submitKodeManual() {
+    const el = document.getElementById('kodeSesiInput');
+    const kode = el ? el.value.trim() : '';
+    if (!kode) { showStatus('Isi kode sesi dulu', 'warning'); return; }
+    if (MState.isProcessing) return;
+    MState.isProcessing = true;
+    await processPresensiSesi(kode);
+    if (el) el.value = '';
 }
 
 function cancelSesiScan() {
@@ -263,12 +311,13 @@ async function processPresensiSesi(qrData) {
 
         if (!result.success) {
             showStatus(result.message || 'Gagal menyimpan presensi', result.alreadyPresent ? 'warning' : 'error');
+            loadActiveSesi(); // sesi mungkin sudah ditutup admin -> segarkan kartu sesi
         } else {
             showStatus('Presensi berhasil dicatat!', 'success');
             loadTodayStatus();
         }
     } catch (error) {
-        showStatus('Error: ' + error.message, 'error');
+        showStatus('Error: ' + errMsg(error), 'error');
     } finally {
         MState.isProcessing = false;
         setTimeout(cancelSesiScan, 1500);
