@@ -177,3 +177,15 @@ function redirectByRole(role) {
 if (/login\.html$|\/$/.test(location.pathname)) {
     try { fetch(WEB_APP_URL + '?action=ping', { mode: 'no-cors' }).catch(() => {}); } catch (e) {}
 }
+function parseSesiTime(sesi) {
+    const m = String((sesi && sesi.sesiId) || '').match(/^SES-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+    if (m) return new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    const d = new Date(sesi && sesi.waktuDibuat);
+    return (isNaN(d) || d.getFullYear() < 2000) ? null : d;
+}
+
+function formatWaktuSesi(sesi) {
+    const d = parseSesiTime(sesi);
+    if (!d) return '';
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
