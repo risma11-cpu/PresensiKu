@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Presensi Kelas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+    <div class="container" style="text-align:center; padding-top:40px; padding-bottom:40px;">
+        <div class="icon-circle" style="margin:0 auto 16px;">
+            <i class="fas fa-qrcode"></i>
+        </div>
+        <h1 style="margin-bottom:8px;">Presensi Kelas</h1>
+        <p class="welcome-text" style="margin:0 auto 20px; text-align:center;">Mengarahkan ke halaman yang sesuai...</p>
+        <div class="loading-text" style="padding:0;">
+            <i class="fas fa-spinner fa-spin"></i> Memuat...
+        </div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        // Halaman ini cuma gerbang: cek session, lalu lempar ke
+        // login.html atau dashboard yang sesuai role. Scan QR sesi
+        // sekarang ada di dashboard mahasiswa, generate QR identitas
+        // juga di sana — bukan di sini lagi, biar gak ada data
+        // mahasiswa yang keliatan tanpa login.
+        (async function gate() {
+            const session = getSession();
+            if (!session || !session.token) {
+                window.location.href = 'login.html';
+                return;
+            }
+            try {
+                const result = await apiGet('verify_token', { token: session.token });
+                if (result.success) {
+                    redirectByRole(result.userData.role);
+                } else {
+                    clearSession();
+                    window.location.href = 'login.html';
+                }
+            } catch (e) {
+                // Gagal cek ke server -> tetap coba pakai role dari session lokal
+                if (session.role) {
+                    redirectByRole(session.role);
+                } else {
+                    window.location.href = 'login.html';
+                }
+            }
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PresensiKu - cimacodes</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            display: ['Poppins', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root {
+      --accent: #6366f1;
+      --accent-glow: #38bdf8;
+      --accent-deep: #312e81;
+      --bg: #eef2ff;
+      --card-bg: rgba(255, 255, 255, 0.85);
+      --input-bg: #f4f6fb;
+      --speed: 0.6s;
+      --ease: cubic-bezier(0.68, -0.10, 0.27, 1.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f0f9ff 100%);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================================
+       BACKGROUND ORBS
+       ============================================================ */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-a {
+      width: 520px; height: 520px;
+      background: radial-gradient(circle, rgba(99,102,241,0.22) 0%, rgba(30,27,75,0.08) 35%, transparent 70%);
+      top: -8%; left: 2%;
+      filter: blur(70px);
+    }
+    .orb-b {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, rgba(56,189,248,0.22) 0%, rgba(15,23,42,0.1) 35%, transparent 70%);
+      bottom: -10%; right: 2%;
+      filter: blur(60px);
+    }
+    .orb-c {
+      width: 280px; height: 280px;
+      background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 60%);
+      top: 45%; left: 55%;
+      filter: blur(50px);
+    }
+
+    /* ============================================================
+       CIRCUIT / PCB TRACE — SVG
+       ============================================================ */
+    .circuit-layer {
+      position: fixed !important;
+      inset: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      pointer-events: none;
+      z-index: 0 !important;
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+
+    @keyframes pulseNode {
+      0%, 100% { opacity: 0.35; r: 2.5; }
+      50%      { opacity: 1;    r: 3.8; }
+    }
+    .cn { animation: pulseNode 2.8s ease-in-out infinite; }
+    .cn-d1 { animation-delay: 0s; }
+    .cn-d2 { animation-delay: 0.5s; }
+    .cn-d3 { animation-delay: 1s; }
+    .cn-d4 { animation-delay: 1.5s; }
+    .cn-d5 { animation-delay: 2s; }
+    .cn-d6 { animation-delay: 0.3s; }
+    .cn-d7 { animation-delay: 0.8s; }
+    .cn-d8 { animation-delay: 1.3s; }
+
+    /* ============================================================
+       AMBIENT PARTICLES
+       ============================================================ */
+    .ptcl {
+      position: fixed;
+      background: var(--accent-glow);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 0;
+      animation: floatUp 7s infinite;
+    }
+    @keyframes floatUp {
+      0%   { opacity: 0; transform: translateY(0); }
+      18%  { opacity: 0.45; }
+      82%  { opacity: 0.12; }
+      100% { opacity: 0; transform: translateY(-100px); }
+    }
+
+    /* ============================================================
+       GLASSMORPHISM CARD
+       ============================================================ */
+    .auth-card {
+      position: relative;
+      width: 880px;
+      max-width: 96vw;
+      height: 560px;
+      background: var(--card-bg);
+      backdrop-filter: blur(26px) saturate(1.5);
+      -webkit-backdrop-filter: blur(26px) saturate(1.5);
+      border: 1px solid rgba(99,102,241,0.12);
+      border-radius: 1.5rem;
+      overflow: hidden;
+      z-index: 1;
+      box-shadow:
+        0 0 100px rgba(99,102,241,0.08),
+        0 35px 90px rgba(30,41,59,0.12),
+        inset 0 1px 0 rgba(255,255,255,0.6);
+    }
+
+    /* Scan line dekoratif */
+    @keyframes scanMove {
+      0%   { top: -2px; opacity: 0; }
+      8%   { opacity: 0.3; }
+      92%  { opacity: 0.3; }
+      100% { top: 100%; opacity: 0; }
+    }
+    .scan-line {
+      position: absolute; left: 0; width: 100%; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-glow), transparent);
+      box-shadow: 0 0 10px var(--accent-glow);
+      animation: scanMove 5s linear infinite;
+      pointer-events: none; z-index: 0;
+    }
+
+    /* ============================================================
+       FORM CONTAINERS
+       ============================================================ */
+    .form-box {
+      position: absolute;
+      top: 0; height: 100%; width: 50%;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 2.2rem;
+      transition: opacity 0.35s ease;
+      z-index: 2;
+    }
+    .form-signin  { left: 0;    opacity: 1; z-index: 5; }
+    .form-signup  { left: 50%;  opacity: 0; z-index: 1; pointer-events: none; }
+
+    .auth-card.active .form-signin  { opacity: 0; z-index: 1; pointer-events: none; }
+    .auth-card.active .form-signup  { opacity: 1; z-index: 5; pointer-events: auto; }
+
+    /* ============================================================
+       SLIDING OVERLAY CONTAINER
+       ============================================================ */
+    .ov-container {
+      position: absolute;
+      top: 0; left: 50%; width: 50%; height: 100%;
+      overflow: hidden;
+      z-index: 100;
+      border-radius: 0;
+      transition:
+        transform var(--speed) var(--ease),
+        border-radius var(--speed) var(--ease);
+    }
+
+    .ov-container { border-radius: 1.5rem 0 0 1.5rem; }
+
+    .auth-card.active .ov-container {
+      transform: translateX(-100%);
+      border-radius: 0 1.5rem 1.5rem 0;
+    }
+
+    .ov-inner {
+      position: relative;
+      width: 200%; height: 100%;
+      left: -100%;
+      background: linear-gradient(110deg, #0f172a 0%, #1e1b4b 18%, #4338ca 38%, #6366f1 58%, #312e81 78%, #0f172a 100%);
+      transition: transform var(--speed) var(--ease);
+    }
+    .auth-card.active .ov-inner { transform: translateX(50%); }
+
+    .ov-panel {
+      position: absolute;
+      top: 0; width: 50%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 0 3rem;
+      text-align: center;
+    }
+    .ov-left  { left: 0;  transform: translateX(-20%); transition: transform var(--speed) var(--ease), opacity 0.4s ease; opacity: 0; pointer-events: none; }
+    .ov-right { right: 0; transform: translateX(0);     transition: transform var(--speed) var(--ease), opacity 0.4s ease; opacity: 1; }
+
+    .auth-card.active .ov-left  { transform: translateX(0);   opacity: 1; pointer-events: auto; }
+    .auth-card.active .ov-right { transform: translateX(20%); opacity: 0; pointer-events: none; }
+
+    .ov-panel::before {
+      content: '';
+      position: absolute; inset: 18px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 1.2rem;
+      pointer-events: none;
+    }
+
+    /* ============================================================
+       INPUT FIELD
+       ============================================================ */
+    .inp {
+      background: var(--input-bg);
+      border: 1px solid #e0e4f0;
+      color: #1e1b4b;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .inp::placeholder { color: #9ca3af; }
+    .inp:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12), 0 0 18px rgba(56,189,248,0.18);
+    }
+
+    /* ============================================================
+       BUTTON: INDIGO GLOW
+       ============================================================ */
+    .btn-red {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 50%, #4338ca 100%);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      border: none;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.3s;
+      box-shadow:
+        0 4px 28px rgba(99,102,241,0.4),
+        0 0 60px rgba(99,102,241,0.15),
+        0 0 120px rgba(99,102,241,0.05);
+    }
+    .btn-red:hover {
+      transform: translateY(-2px) scale(1.02);
+      box-shadow:
+        0 8px 40px rgba(99,102,241,0.55),
+        0 0 80px rgba(99,102,241,0.25),
+        0 0 140px rgba(99,102,241,0.1);
+    }
+    .btn-red:active { transform: translateY(0) scale(0.98); }
+    .btn-red::after {
+      content: '';
+      position: absolute; top: 0; left: -100%; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+      transition: left 0.5s;
+    }
+    .btn-red:hover::after { left: 100%; }
+
+    /* Ghost button (overlay) */
+    .btn-ghost {
+      border: 2px solid rgba(255,255,255,0.3);
+      color: #fff;
+      font-family: 'Poppins', sans-serif;
+      font-weight: 600;
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+      background: transparent;
+      cursor: pointer;
+      transition: background 0.3s, border-color 0.3s, transform 0.2s, box-shadow 0.3s;
+    }
+    .btn-ghost:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 0 25px rgba(255,255,255,0.08);
+    }
+
+    /* ============================================================
+       UTILITIES
+       ============================================================ */
+    .pw-btn {
+      color: #9ca3af; cursor: pointer; background: none; border: none;
+      transition: color 0.2s;
+    }
+    .pw-btn:hover { color: var(--accent); }
+
+    .soc-btn {
+      background: var(--input-bg);
+      border: 1px solid #e0e4f0;
+      color: #6b7280;
+      cursor: pointer;
+      transition: border-color 0.3s, color 0.3s, box-shadow 0.3s;
+    }
+    .soc-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      box-shadow: 0 0 16px rgba(99,102,241,0.16);
+    }
+
+    .lnk {
+      color: var(--accent); cursor: pointer;
+      transition: color 0.2s, text-shadow 0.2s; text-decoration: none;
+    }
+    .lnk:hover { color: var(--accent-glow); text-shadow: 0 0 10px rgba(56,189,248,0.3); }
+
+    .divider-line {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #d7dcec);
+    }
+    .divider-line-r {
+      height: 1px;
+      background: linear-gradient(to left, transparent, #d7dcec);
+    }
+
+    /* ============================================================
+       TOAST
+       ============================================================ */
+    .toast {
+      position: fixed; top: 24px; right: 24px;
+      padding: 12px 24px;
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(99,102,241,0.15);
+      border-radius: 12px;
+      color: #1e1b4b;
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      z-index: 9999;
+      transform: translateX(140%);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      box-shadow: 0 8px 30px rgba(30,41,59,0.12);
+    }
+    .toast.show { transform: translateX(0); }
+
+    /* ============================================================
+       RESPONSIVE
+       ============================================================ */
+    @media (max-width: 800px) {
+      .auth-card { width: 96vw !important; height: auto !important; min-height: 500px; }
+      .ov-container { display: none !important; }
+      .form-box { width: 100% !important; left: 0 !important; }
+      .form-signin  { opacity: 1 !important; z-index: 5 !important; pointer-events: auto !important; }
+      .form-signup  { opacity: 0 !important; z-index: 1 !important; pointer-events: none !important; }
+      .auth-card.active .form-signin  { opacity: 0 !important; z-index: 1 !important; pointer-events: none !important; }
+      .auth-card.active .form-signup  { opacity: 1 !important; z-index: 5 !important; pointer-events: auto !important; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+<style id="donezo-login">
+    /* Login — gaya Donezo (hijau, membulat). Logika/JS tidak diubah. */
+    :root { --accent:#217a52; --accent-glow:#5fbd8f; --accent-deep:#0f3d2a; --input-bg:#f4f6f4; }
+    body { background: linear-gradient(180deg,#f2f2f2,#dcdddd) !important; font-family: 'Plus Jakarta Sans','Inter',sans-serif; }
+    .orb, .circuit-layer, #ptcls, .scan-line { display: none !important; }
+    .auth-card { border-radius: 44px !important; border: 0 !important; background: #fff !important; box-shadow: 0 30px 60px -30px rgba(0,0,0,.28) !important; }
+    .ov-container { border-radius: 32px 0 0 32px !important; }
+    .auth-card.active .ov-container { border-radius: 0 32px 32px 0 !important; }
+    .ov-inner { background: radial-gradient(circle at 80% 90%, #1f7a4d 0, transparent 55%), repeating-radial-gradient(circle at 120% 120%, rgba(255,255,255,.07) 0 2px, transparent 2px 22px), #0b2c1d !important; }
+    .form-box { background: transparent; }
+    h1.font-display, h2.font-display { font-family: 'Plus Jakarta Sans', sans-serif !important; font-weight: 600 !important; letter-spacing: -.02em !important; }
+    h1.font-display { color: #111 !important; font-size: 30px !important; }
+    .inp { border-radius: 999px !important; background: #f4f6f4 !important; border: 1px solid transparent !important; padding-top: 13px !important; padding-bottom: 13px !important; }
+    .inp:focus { border-color: #217a52 !important; box-shadow: 0 0 0 3px rgba(33,122,82,.14) !important; }
+    .btn-red { border-radius: 999px !important; background: linear-gradient(135deg,#14532d,#1f7a4d) !important; box-shadow: none !important; padding-top: 14px !important; padding-bottom: 14px !important; font-weight: 600; }
+    .btn-red:hover { box-shadow: 0 10px 24px -10px rgba(20,83,45,.6) !important; }
+    .btn-ghost { border-radius: 999px !important; padding: 12px 34px !important; }
+    .soc-btn { border-radius: 50% !important; width: 42px !important; height: 42px !important; background: #f4f6f4 !important; border-color: transparent !important; }
+    .lnk { color: #217a52 !important; } .lnk:hover { color: #14532d !important; text-shadow: none !important; }
+    .divider-line, .divider-line-r { background: #e6e9e7 !important; }
+    .toast { border-radius: 999px !important; border-color: #b8dfc9 !important; }
+  </style>
+</head>
+<body>
+
+  <!-- ===== BACKGROUND ORBS ===== -->
+  <div class="orb orb-a"></div>
+  <div class="orb orb-b"></div>
+  <div class="orb orb-c"></div>
+
+  <!-- ===== CIRCUIT / PCB TRACE SVG ===== -->
+  <svg class="circuit-layer" viewBox="0 0 1440 900" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="glow">
+        <feGaussianBlur stdDeviation="3" result="blur"/>
+        <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+
+    <!-- ====== KIRI ATAS ====== -->
+    <g filter="url(#glow)">
+      <line x1="0"   y1="55"  x2="150" y2="55"  stroke="#4f46e5" stroke-width="1.3" opacity="0.4"/>
+      <line x1="150" y1="55"  x2="150" y2="130" stroke="#4f46e5" stroke-width="1.3" opacity="0.4"/>
+      <line x1="45"  y1="0"   x2="45"  y2="55"  stroke="#4f46e5" stroke-width="1"   opacity="0.28"/>
+      <line x1="45"  y1="55"  x2="95"  y2="55"  stroke="#4f46e5" stroke-width="0.8" opacity="0.2"/>
+      <line x1="85"  y1="90"  x2="150" y2="90"  stroke="#4f46e5" stroke-width="0.8" opacity="0.2"/>
+      <line x1="85"  y1="90"  x2="85"  y2="130" stroke="#4f46e5" stroke-width="0.8" opacity="0.2"/>
+      <line x1="150" y1="130" x2="220" y2="130" stroke="#4f46e5" stroke-width="1"   opacity="0.28"/>
+      <line x1="220" y1="130" x2="220" y2="80"  stroke="#4f46e5" stroke-width="0.8" opacity="0.18"/>
+      <line x1="180" y1="30"  x2="250" y2="30"  stroke="#4f46e5" stroke-width="0.7" opacity="0.15"/>
+      <line x1="180" y1="0"   x2="180" y2="30"  stroke="#4f46e5" stroke-width="0.7" opacity="0.15"/>
+    </g>
+    <circle cx="150" cy="55"  r="3" fill="#38bdf8" class="cn cn-d1" opacity="0.7" filter="url(#glow)"/>
+    <circle cx="45"  cy="55"  r="2.5" fill="#38bdf8" class="cn cn-d3" opacity="0.55" filter="url(#glow)"/>
+    <circle cx="85"  cy="90"  r="2" fill="#38bdf8" class="cn cn-d5" opacity="0.45" filter="url(#glow)"/>
+    <circle cx="0"   cy="55"  r="2.5" fill="#38bdf8" class="cn cn-d2" opacity="0.55" filter="url(#glow)"/>
+    <circle cx="45"  cy="0"   r="2" fill="#38bdf8" class="cn cn-d4" opacity="0.4" filter="url(#glow)"/>
+    <circle cx="220" cy="130" r="2.5" fill="#38bdf8" class="cn cn-d6" opacity="0.5" filter="url(#glow)"/>
+    <rect x="160" y="122" width="12" height="7" rx="1" fill="none" stroke="#6366f1" stroke-width="0.6" opacity="0.2"/>
+    <circle cx="180" cy="125.5" r="4.5" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- ====== KANAN BAWAH ====== -->
+    <g filter="url(#glow)">
+      <line x1="1440" y1="845" x2="1290" y2="845" stroke="#4f46e5" stroke-width="1.6" opacity="0.55"/>
+      <line x1="1290" y1="845" x2="1290" y2="770" stroke="#4f46e5" stroke-width="1.6" opacity="0.55"/>
+      <line x1="1395" y1="900" x2="1395" y2="845" stroke="#4f46e5" stroke-width="1.2" opacity="0.4"/>
+      <line x1="1395" y1="845" x2="1345" y2="845" stroke="#4f46e5" stroke-width="1"   opacity="0.32"/>
+      <line x1="1355" y1="810" x2="1290" y2="810" stroke="#4f46e5" stroke-width="1"   opacity="0.32"/>
+      <line x1="1355" y1="810" x2="1355" y2="770" stroke="#4f46e5" stroke-width="1"   opacity="0.32"/>
+      <line x1="1290" y1="770" x2="1220" y2="770" stroke="#4f46e5" stroke-width="1.2" opacity="0.4"/>
+      <line x1="1220" y1="770" x2="1220" y2="820" stroke="#4f46e5" stroke-width="1"   opacity="0.28"/>
+      <line x1="1260" y1="870" x2="1190" y2="870" stroke="#4f46e5" stroke-width="0.9" opacity="0.25"/>
+      <line x1="1260" y1="900" x2="1260" y2="870" stroke="#4f46e5" stroke-width="0.9" opacity="0.25"/>
+    </g>
+    <circle cx="1290" cy="845" r="3.5" fill="#0ea5e9" class="cn cn-d2" opacity="0.9" filter="url(#glow)"/>
+    <circle cx="1395" cy="845" r="3" fill="#0ea5e9" class="cn cn-d4" opacity="0.75" filter="url(#glow)"/>
+    <circle cx="1355" cy="810" r="2.5" fill="#0ea5e9" class="cn cn-d1" opacity="0.65" filter="url(#glow)"/>
+    <circle cx="1440" cy="845" r="3" fill="#0ea5e9" class="cn cn-d3" opacity="0.75" filter="url(#glow)"/>
+    <circle cx="1395" cy="900" r="2.5" fill="#0ea5e9" class="cn cn-d5" opacity="0.6" filter="url(#glow)"/>
+    <circle cx="1220" cy="770" r="3" fill="#0ea5e9" class="cn cn-d7" opacity="0.7" filter="url(#glow)"/>
+    <rect x="1268" y="763" width="12" height="7" rx="1" fill="none" stroke="#4f46e5" stroke-width="0.8" opacity="0.3"/>
+    <circle cx="1258" cy="766.5" r="4.5" fill="none" stroke="#4f46e5" stroke-width="0.7" opacity="0.25"/>
+  </svg>
+
+  <!-- ===== PARTICLES ===== -->
+  <div id="ptcls"></div>
+
+  <!-- ===== TOAST ===== -->
+  <div id="toast" class="toast" role="alert" aria-live="polite">
+    <i class="fa-solid fa-circle-check mr-2" style="color:var(--accent)"></i>
+    <span id="toastMsg"></span>
+  </div>
+
+  <!-- ============================================================
+       MAIN AUTH CARD
+       ============================================================ -->
+  <main class="auth-card" id="card">
+
+    <div class="scan-line"></div>
+
+    <!-- ====== SIGN IN FORM (kiri) ====== -->
+    <div class="form-box form-signin">
+      <form class="w-full max-w-[280px]" onsubmit="handleLogin(event)" novalidate>
+        <h1 class="font-display text-xl font-bold tracking-wider mb-1" style="color:#1e1b4b">Login</h1>
+        <p class="text-sm mb-5" style="color:#6b7280">Masuk ke akun kamu</p>
+
+        <!-- Email -->
+        <div class="relative mb-4">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#9ca3af"><i class="fa-solid fa-envelope"></i></span>
+          <input type="email" id="lEmail" class="inp w-full pl-10 pr-4 py-2.5 rounded-lg" placeholder="Email" required aria-label="Email" />
+        </div>
+
+        <!-- Password -->
+        <div class="relative mb-2">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#9ca3af"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" id="lPw" class="inp w-full pl-10 pr-10 py-2.5 rounded-lg" placeholder="Password" required aria-label="Password" />
+          <button type="button" class="pw-btn absolute right-3 top-1/2 -translate-y-1/2 text-sm" onclick="togPw('lPw',this)" aria-label="Toggle password"><i class="fa-solid fa-eye"></i></button>
+        </div>
+
+        <!-- Forgot -->
+        <div class="text-right mb-5">
+          <a href="#" class="lnk text-xs" onclick="toast('Fitur segera hadir');return false">Forgot Password?</a>
+        </div>
+
+        <!-- Tombol Login -->
+        <button type="submit" class="btn-red w-full py-2.5 rounded-lg text-xs tracking-widest">Login</button>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-4">
+          <div class="flex-1 divider-line"></div>
+          <span class="text-[10px] uppercase tracking-widest" style="color:#9ca3af">atau</span>
+          <div class="flex-1 divider-line-r"></div>
+        </div>
+
+        <!-- Social -->
+        <div class="flex gap-3 justify-center mb-4">
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Login Google segera hadir')"><i class="fa-brands fa-google"></i></button>
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Login GitHub segera hadir')"><i class="fa-brands fa-github"></i></button>
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Login Discord segera hadir')"><i class="fa-brands fa-discord"></i></button>
+        </div>
+
+        <!-- Link -->
+        <p class="text-center text-sm" style="color:#6b7280">
+          Belum punya akun? <a href="#" class="lnk font-semibold" onclick="flip();return false">Sign Up</a>
+        </p>
+      </form>
+    </div>
+
+    <!-- ====== SIGN UP FORM (kanan) ====== -->
+    <div class="form-box form-signup">
+      <form class="w-full max-w-[280px]" onsubmit="handleSignup(event)" novalidate>
+        <h1 class="font-display text-xl font-bold tracking-wider mb-1" style="color:#1e1b4b">Sign Up</h1>
+        <p class="text-sm mb-5" style="color:#6b7280">Buat akun baru</p>
+
+        <!-- NIM -->
+        <div class="relative mb-4">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#9ca3af"><i class="fa-solid fa-hashtag"></i></span>
+          <input type="text" id="sNim" class="inp w-full pl-10 pr-4 py-2.5 rounded-lg" placeholder="NIM" required aria-label="NIM" maxlength="15" />
+        </div>
+
+        <!-- Email -->
+        <div class="relative mb-4">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#9ca3af"><i class="fa-solid fa-envelope"></i></span>
+          <input type="email" id="sEmail" class="inp w-full pl-10 pr-4 py-2.5 rounded-lg" placeholder="Email" required aria-label="Email" />
+        </div>
+
+        <!-- Password -->
+        <div class="relative mb-5">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm" style="color:#9ca3af"><i class="fa-solid fa-lock"></i></span>
+          <input type="password" id="sPw" class="inp w-full pl-10 pr-10 py-2.5 rounded-lg" placeholder="Password" required aria-label="Password" />
+          <button type="button" class="pw-btn absolute right-3 top-1/2 -translate-y-1/2 text-sm" onclick="togPw('sPw',this)" aria-label="Toggle password"><i class="fa-solid fa-eye"></i></button>
+        </div>
+
+        <!-- Tombol Sign Up -->
+        <button type="submit" class="btn-red w-full py-2.5 rounded-lg text-xs tracking-widest">Sign Up</button>
+
+        <!-- Divider -->
+        <div class="flex items-center gap-3 my-4">
+          <div class="flex-1 divider-line"></div>
+          <span class="text-[10px] uppercase tracking-widest" style="color:#9ca3af">atau</span>
+          <div class="flex-1 divider-line-r"></div>
+        </div>
+
+        <!-- Social -->
+        <div class="flex gap-3 justify-center mb-4">
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Sign up Google segera hadir')"><i class="fa-brands fa-google"></i></button>
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Sign up GitHub segera hadir')"><i class="fa-brands fa-github"></i></button>
+          <button type="button" class="soc-btn w-9 h-9 rounded-lg flex items-center justify-center text-sm" onclick="toast('Sign up Discord segera hadir')"><i class="fa-brands fa-discord"></i></button>
+        </div>
+
+        <!-- Link -->
+        <p class="text-center text-sm" style="color:#6b7280">
+          Sudah punya akun? <a href="#" class="lnk font-semibold" onclick="flip();return false">Login</a>
+        </p>
+      </form>
+    </div>
+
+    <!-- ============================================================
+         SLIDING OVERLAY / BANNER PANEL
+         ============================================================ -->
+    <div class="ov-container">
+      <div class="ov-inner">
+
+        <!-- Panel KIRI: "HELLO, FRIEND!" -->
+        <div class="ov-panel ov-left">
+          <div class="relative z-10">
+            <div class="mb-5 flex justify-center">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 10px rgba(56,189,248,0.25))">
+                <path d="M28 3L51 16.5V39.5L28 53L5 39.5V16.5L28 3Z" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+                <path d="M28 13L41 21V35L28 43L15 35V21L28 13Z" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+                <circle cx="28" cy="28" r="5" fill="rgba(255,255,255,0.14)"/>
+              </svg>
+            </div>
+            <h2 class="font-display text-[22px] font-bold text-white tracking-wider mb-2">HELLO, FRIEND!</h2>
+            <p class="text-sm mb-6 leading-relaxed px-3" style="color:rgba(255,255,255,0.6)">
+              Masukkan data pribadi kamu dan mulai perjalanan bersama kami.
+            </p>
+            <button type="button" class="btn-ghost px-8 py-2 rounded-lg text-[11px] tracking-widest" onclick="flip()">Login</button>
+          </div>
+        </div>
+
+        <!-- Panel KANAN: "WELCOME BACK!" -->
+        <div class="ov-panel ov-right">
+          <div class="relative z-10">
+            <div class="mb-5 flex justify-center">
+              <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="filter:drop-shadow(0 0 10px rgba(56,189,248,0.25))">
+                <path d="M28 3L51 16.5V39.5L28 53L5 39.5V16.5L28 3Z" stroke="rgba(255,255,255,0.22)" stroke-width="1"/>
+                <path d="M28 13L41 21V35L28 43L15 35V21L28 13Z" stroke="rgba(255,255,255,0.12)" stroke-width="0.7"/>
+                <circle cx="28" cy="28" r="5" fill="rgba(255,255,255,0.14)"/>
+              </svg>
+            </div>
+            <h2 class="font-display text-[22px] font-bold text-white tracking-wider mb-2">WELCOME BACK!</h2>
+            <p class="text-sm mb-6 leading-relaxed px-3" style="color:rgba(255,255,255,0.6)">
+              Sudah punya akun? Masuk dengan informasi pribadi kamu di sini.
+            </p>
+            <button type="button" class="btn-ghost px-8 py-2 rounded-lg text-[11px] tracking-widest" onclick="flip()">Sign Up</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================
+       JAVASCRIPT
+       ============================================================ -->
+  <script src="auth.js"></script>
+  <script>
+    function flip() {
+      document.getElementById('card').classList.toggle('active');
+    }
+
+    function togPw(id, btn) {
+      const inp = document.getElementById(id);
+      const ico = btn.querySelector('i');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        ico.classList.replace('fa-eye', 'fa-eye-slash');
+      } else {
+        inp.type = 'password';
+        ico.classList.replace('fa-eye-slash', 'fa-eye');
+      }
+    }
+
+    let _tt = null;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      document.getElementById('toastMsg').textContent = msg;
+      el.classList.add('show');
+      clearTimeout(_tt);
+      _tt = setTimeout(() => el.classList.remove('show'), 2600);
+    }
+
+    const okEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+
+    function setBtnLoading(form, loading, label) {
+      const btn = form.querySelector('button[type="submit"]');
+      if (!btn) return;
+      if (loading) {
+        btn.dataset.originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = label;
+      } else {
+        btn.disabled = false;
+        btn.textContent = btn.dataset.originalText || btn.textContent;
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const form = e.target;
+      const em = document.getElementById('lEmail').value.trim();
+      const pw = document.getElementById('lPw').value;
+      if (!em || !pw) { toast('Harap isi semua field'); return; }
+      if (!okEmail(em)) { toast('Format email tidak valid'); return; }
+
+      setBtnLoading(form, true, 'Memproses...');
+      try {
+        const result = await doLogin(em, pw);
+        if (!result.success) {
+          toast(result.message || 'Email atau password salah');
+          setBtnLoading(form, false);
+          return;
+        }
+        toast('Login berhasil — selamat datang!');
+        setTimeout(() => redirectByRole(result.role), 700);
+      } catch (err) {
+        toast('Gagal terhubung ke server: ' + err.message);
+        setBtnLoading(form, false);
+      }
+    }
+
+    async function handleSignup(e) {
+      e.preventDefault();
+      const form = e.target;
+      const nim = document.getElementById('sNim').value.trim();
+      const em  = document.getElementById('sEmail').value.trim();
+      const pw  = document.getElementById('sPw').value;
+      if (!nim || !em || !pw) { toast('Harap isi semua field'); return; }
+      if (!okEmail(em)) { toast('Format email tidak valid'); return; }
+      if (pw.length < 6) { toast('Password minimal 6 karakter'); return; }
+
+      setBtnLoading(form, true, 'Memproses...');
+      try {
+        const result = await doSignup(em, pw, nim);
+        if (!result.success) {
+          toast(result.message || 'Gagal membuat akun');
+          setBtnLoading(form, false);
+          return;
+        }
+        toast('Akun berhasil dibuat! Silakan login.');
+        setTimeout(() => {
+          if (document.getElementById('card').classList.contains('active')) flip();
+        }, 1100);
+      } catch (err) {
+        toast('Gagal terhubung ke server: ' + err.message);
+      } finally {
+        setBtnLoading(form, false);
+      }
+    }
+
+    // Kalau ada session lama tersimpan, JANGAN langsung lempar otomatis —
+    // tampilin banner dulu, biar bisa pilih lanjut atau ganti akun.
+    // (Sebelumnya auto-redirect diam-diam, jadi kalau mau login pakai
+    // akun lain, form login-nya gak sempat kepake sama sekali.)
+    (async function checkExistingSession() {
+      const session = getSession();
+      if (!session || !session.token) return;
+
+      let valid = false;
+      let role = session.role;
+      let nama = (session.userData && session.userData.nama) || '';
+      try {
+        const result = await apiGet('verify_token', { token: session.token });
+        if (result.success) {
+          valid = true;
+          role = result.userData.role;
+          nama = result.userData.nama;
+        }
+      } catch (e) { /* offline dsb — pakai data session lokal apa adanya */ }
+
+      if (!valid && !session.role) return; // session gak jelas, biarkan di form login
+
+      const roleLabel = role === 'admin' ? 'Admin' : 'Mahasiswa';
+      const banner = document.createElement('div');
+      banner.style.cssText = 'position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#111827;color:#fff;padding:12px 16px;border-radius:10px;font-size:13px;display:flex;align-items:center;gap:12px;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:92vw;';
+      banner.innerHTML = `
+        <span>Kamu masih login sebagai <strong>${nama || '-'}</strong> (${roleLabel})</span>
+        <button id="bannerLanjut" style="background:#4f46e5;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px;white-space:nowrap;">Lanjut</button>
+        <button id="bannerGanti" style="background:transparent;color:#fca5a5;border:1px solid #fca5a5;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:12.5px;white-space:nowrap;">Ganti Akun</button>
+      `;
+      document.body.appendChild(banner);
+
+      document.getElementById('bannerLanjut').onclick = () => redirectByRole(role);
+      document.getElementById('bannerGanti').onclick = () => {
+        clearSession();
+        banner.remove();
+      };
+    })();
+
+    (function() {
+      const c = document.getElementById('ptcls');
+      for (let i = 0; i < 28; i++) {
+        const d = document.createElement('div');
+        d.className = 'ptcl';
+        d.style.left = Math.random() * 100 + '%';
+        d.style.top = (12 + Math.random() * 76) + '%';
+        d.style.animationDelay = (Math.random() * 7).toFixed(2) + 's';
+        d.style.animationDuration = (5 + Math.random() * 4).toFixed(2) + 's';
+        const s = (1 + Math.random() * 2.2) + 'px';
+        d.style.width = s; d.style.height = s;
+        c.appendChild(d);
+      }
+    })();
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && document.getElementById('card').classList.contains('active')) flip();
+    });
+  </script>
+</body>
+</html>

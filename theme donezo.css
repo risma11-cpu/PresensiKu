@@ -1,0 +1,223 @@
+/* ================================================================
+   THEME DONEZO — override tampilan saja. Dimuat SETELAH style.css.
+   Logika/JS/backend tidak tersentuh.
+   ================================================================ */
+:root {
+  --background: 0 0% 96%;
+  --foreground: 0 0% 7%;
+  --primary: 152 60% 24%;
+  --primary-hover: 152 62% 19%;
+  --accent: 150 40% 92%;
+  --accent-foreground: 152 60% 22%;
+  --muted: 0 0% 96%;
+  --secondary: 0 0% 96%;
+  --muted-foreground: 210 6% 55%;
+  --border: 0 0% 92%;
+  --ring: 152 55% 35%;
+  --success: 152 60% 30%;
+  --info: 152 55% 32%;
+  --warning: 38 92% 46%;
+  --radius: 1.25rem; --radius-sm: 0.9rem; --radius-lg: 1.75rem;
+  --g1: #0f3d2a; --g2: #217a52; --g3: #5fbd8f; --g4: #14432e;
+  --font-sans: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
+  --shadow-sm: none; --shadow-md: none; --shadow-lg: none;
+}
+body { background: linear-gradient(180deg,#f0f0f0,#dedfe0); background-image: linear-gradient(180deg,#f2f2f2,#dcdddd); }
+body.admin-shell-page { padding: 28px; }
+.hatch { background: repeating-linear-gradient(-45deg,#8a9a92 0 2px,#e9eeea 2px 6px); }
+
+/* ---------- Frame luar ---------- */
+.admin-shell { max-width: 1680px; margin: 0 auto; background: #fff; border-radius: 44px; padding: 26px; gap: 20px; min-height: calc(100vh - 56px); box-shadow: 0 30px 60px -30px rgba(0,0,0,.25); }
+
+/* ---------- Sidebar ---------- */
+.side-nav { position: sticky; top: 26px; height: calc(100vh - 108px); width: 270px; border: 0; border-radius: 32px; background: #f7f7f7; padding: 22px 18px 18px; z-index: 40; }
+.side-brand { border: 0; padding: 4px 8px 18px; gap: 10px; }
+.side-brand .icon-circle { width: 44px; height: 44px; border-radius: 50%; background: transparent; border: 5px solid #217a52; color: #217a52; font-size: 15px; }
+.side-brand-title { font-size: 21px; font-weight: 600; letter-spacing: -.02em; }
+.side-brand-sub { display: none; }
+.side-menu { padding: 0; }
+.side-group-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0; font-weight: 500; color: #8b9590; margin: 22px 12px 10px; }
+.side-link { position: relative; padding: 12px 16px; border-radius: 14px; font-size: 16px; font-weight: 500; color: #7c8681; gap: 14px; }
+.side-link i { font-size: 16px; width: 20px; color: #8b9590; }
+.side-link:hover { background: #eef2ef; }
+.side-link.active { background: transparent; color: #111; font-weight: 600; }
+.side-link.active i { color: #217a52; }
+.side-link.active::before { content: ''; position: absolute; left: -18px; top: 6px; bottom: 6px; width: 8px; border-radius: 0 8px 8px 0; background: #217a52; }
+.side-badge { background: #0f2e20; color: #fff; font-size: 11px; padding: 3px 8px; border-radius: 8px; }
+.side-footer { border: 0; padding: 0; }
+.side-promo { position: relative; overflow: hidden; border-radius: 24px; padding: 18px; color: #fff; margin-bottom: 12px;
+  background: radial-gradient(circle at 80% 90%, #1f7a4d 0, transparent 55%), repeating-radial-gradient(circle at 120% 120%, rgba(255,255,255,.07) 0 2px, transparent 2px 22px), #06170f; }
+.side-promo .pi { width: 26px; height: 26px; border-radius: 50%; background: #fff; color: #0f3d2a; display: grid; place-items: center; font-size: 12px; margin-bottom: 12px; }
+.side-promo h4 { font-size: 20px; font-weight: 500; line-height: 1.15; margin-bottom: 6px; }
+.side-promo p { font-size: 12px; opacity: .75; margin-bottom: 14px; }
+.side-promo button { width: 100%; border: 0; border-radius: 999px; padding: 12px; background: #17553a; color: #fff; font: 600 13px var(--font-sans); cursor: pointer; }
+.side-status { margin-bottom: 8px; padding-left: 6px; }
+.btn-logout { background: transparent; color: #7c8681; border: 0; font-weight: 500; }
+
+/* ---------- Area utama ---------- */
+.main-panel { margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; flex: 1; min-width: 0; }
+.top-bar { background: #f7f7f7; border-radius: 32px; padding: 18px 24px; margin: 0; gap: 14px; flex-wrap: nowrap; }
+.top-bar-greet { display: none; }
+.top-search { flex: 0 1 520px; width: auto; max-width: none; border-radius: 999px; background: #fff; border: 0; padding: 0 16px; height: 56px; }
+.top-search input { font-size: 15px; }
+.top-search .kbd { background: #ececec; border-radius: 8px; font-size: 12px; padding: 4px 9px; color: #666; white-space: nowrap; }
+.top-bar-actions { margin-left: auto; gap: 14px; }
+.circle-btn { width: 56px; height: 56px; border-radius: 50%; border: 0; background: #fff; color: #222; font-size: 17px; cursor: pointer; position: relative; }
+.circle-btn:hover { background: #eef2ef; }
+.circle-btn .ping { position: absolute; top: 12px; right: 13px; min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: #217a52; color: #fff; font: 700 10px/16px var(--font-sans); text-align: center; }
+.top-avatar { width: 56px; height: 56px; order: -1; background: linear-gradient(135deg,#217a52,#5fbd8f); color: #fff; border-radius: 50%; font: 700 20px var(--font-sans); display: grid; place-items: center; }
+.top-user { display: flex; flex-direction: column; line-height: 1.25; }
+.top-user b { font-size: 17px; font-weight: 600; } .top-user small { font-size: 14px; color: #8b9590; }
+.top-user-name { display: none; }
+.top-bar-actions .who { display: flex; align-items: center; gap: 12px; order: 3; }
+
+.content-panel { background: #f7f7f7; border-radius: 32px; padding: 26px; flex: 1; }
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.page-head h1 { font-size: 46px; font-weight: 600; letter-spacing: -.03em; line-height: 1.1; }
+.page-head p { color: #8b9590; font-size: 19px; margin-top: 8px; }
+.page-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.pill-btn { display: inline-flex; align-items: center; gap: 10px; height: 60px; padding: 0 30px; border-radius: 999px; font: 500 19px var(--font-sans); cursor: pointer; border: 2px solid #14432e; }
+.pill-btn.solid { background: linear-gradient(135deg,#14532d,#1f7a4d); color: #fff; }
+.pill-btn.line { background: transparent; color: #14432e; }
+.pill-btn.sm { height: 40px; padding: 0 16px; font-size: 14px; border-width: 1.5px; }
+
+.status { margin-bottom: 14px; }
+.tab-panel { animation: none; }
+
+/* ---------- Grid bento ---------- */
+.bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 18px; }
+.card { background: #fff; border-radius: 28px; padding: 24px; min-width: 0; }
+.card h3 { font-size: 21px; font-weight: 600; letter-spacing: -.01em; }
+.card-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+.c-stat { grid-column: span 3; min-height: 210px; position: relative; display: flex; flex-direction: column; }
+.c-stat .t { font-size: 21px; font-weight: 500; padding-right: 50px; }
+.c-stat .go { position: absolute; top: 20px; right: 20px; width: 52px; height: 52px; border-radius: 50%; border: 1.5px solid #222; display: grid; place-items: center; font-size: 15px; background: transparent; cursor: pointer; color: #111; }
+.c-stat .stat-value { font-size: 72px; font-weight: 500; letter-spacing: -.04em; margin-top: auto; color: #111; line-height: 1; }
+.c-stat .note { margin-top: 14px; font-size: 16px; color: #5b6660; display: flex; align-items: center; gap: 8px; }
+.c-stat .note .mini { border: 1.5px solid currentColor; border-radius: 7px; padding: 1px 6px; font-size: 11px; }
+.c-stat.hl { color: #fff; background: radial-gradient(circle at 15% 85%, rgba(140,255,150,.16), transparent 45%), linear-gradient(135deg,#0f3d2a,#1f7a4d); }
+.c-stat.hl .go { background: #fff; border-color: #fff; }
+.c-stat.hl .stat-value, .c-stat.hl .note { color: #fff; } .c-stat.hl .note { color: #b9f5c8; }
+.stat-card.active-glow .stat-value { color: #217a52; }
+
+.dash-main { grid-column: 1 / -1; display: grid; grid-template-columns: 9fr 3fr; gap: 18px; align-items: stretch; }
+.dm-left { display: grid; grid-template-columns: repeat(9, 1fr); gap: 18px; align-content: start; min-width: 0; }
+.dm-right { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.c-analytics { grid-column: span 6; }
+.c-remind { grid-column: span 3; }
+.c-team { grid-column: span 5; }
+.c-progress { grid-column: span 4; }
+.c-project { flex: 1; }
+.c-tracker { grid-column: span 3; color: #fff; background: radial-gradient(ellipse at 20% 100%, rgba(80,220,140,.35), transparent 55%), repeating-radial-gradient(ellipse at 10% 120%, rgba(255,255,255,.06) 0 2px, transparent 2px 16px), #0b3320; display: flex; flex-direction: column; }
+.c-tracker h3 { color: #fff; font-weight: 500; }
+.timer { font-size: 54px; font-weight: 600; letter-spacing: -.02em; margin: 12px 0 auto; font-variant-numeric: tabular-nums; }
+.timer-btns { display: flex; gap: 14px; margin-top: 14px; }
+.timer-btns button { width: 62px; height: 62px; border-radius: 50%; border: 0; font-size: 20px; cursor: pointer; background: #fff; color: #0b3320; }
+.timer-btns button.stop { background: #e5383b; color: #fff; }
+
+/* Analytics kapsul */
+.caps { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 230px; margin-top: 8px; }
+.cap-col { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 8px; position: relative; }
+.cap { width: 100%; max-width: 84px; border-radius: 999px; min-height: 56px; position: relative; transition: height .4s; }
+.cap.v1 { background: #14432e; } .cap.v2 { background: #217a52; } .cap.v3 { background: #5fbd8f; }
+.cap.off { background: repeating-linear-gradient(-45deg,#8a9a92 0 2px,#fff 2px 6px); border: 1px solid #cfd8d2; }
+.cap-col small { font-size: 17px; color: #8b9590; }
+.cap-tip { position: absolute; top: -26px; background: #fff; border: 1px solid #dfe5e1; border-radius: 8px; font-size: 11px; padding: 2px 8px; color: #217a52; white-space: nowrap; }
+
+/* Sesi (Reminders) — markup dari admin.js, hanya di-restyle */
+.sesi-card { background: transparent !important; border: 0 !important; padding: 0 !important; text-align: left !important; color: #111; font-size: 15px; }
+.sesi-card .sesi-title { color: #8b9590; text-transform: none; font-size: 15px; letter-spacing: 0; }
+.sesi-card .sesi-mk { font-size: 28px; font-weight: 600; color: #217a52; line-height: 1.15; letter-spacing: -.02em; }
+.sesi-card .sesi-meta { color: #8b9590; font-size: 14px; }
+.sesi-qr-box img { width: 150px; height: 150px; border-radius: 16px; }
+.hadir-mini-list { max-height: 90px; }
+.btn-end-sesi { border-radius: 999px !important; padding: 14px !important; }
+.qr-input-group button, .qr-input-group.button { border-radius: 999px; background: linear-gradient(135deg,#14532d,#1f7a4d); color: #fff; padding: 15px; font-weight: 600; border: 0; cursor: pointer; display: flex; gap: 8px; align-items: center; }
+.input-field { border-radius: 999px; background: #f7f7f7; border-color: transparent; }
+
+/* Project list */
+.plist { display: flex; flex-direction: column; gap: 18px; }
+.pitem { display: flex; gap: 14px; align-items: center; }
+.pico { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; font-size: 18px; background: #e9f5ee; color: #217a52; flex-shrink: 0; }
+.pitem b { font-size: 17px; font-weight: 500; display: block; } .pitem small { color: #8b9590; font-size: 13px; }
+
+/* Team / aktivitas */
+.activity-list { max-height: 330px; gap: 4px; }
+.arow { display: flex; align-items: center; gap: 14px; padding: 9px 0; }
+.av { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; font-weight: 700; font-size: 17px; color: #14432e; flex-shrink: 0; }
+.arow .tx { flex: 1; min-width: 0; } .arow .tx b { font-size: 18px; font-weight: 500; display: block; }
+.arow .tx small { color: #8b9590; font-size: 14px; } .arow .tx small strong { color: #111; }
+.badge { font-size: 12px; padding: 4px 12px; border-radius: 8px; border: 1px solid; white-space: nowrap; }
+.badge.ok { color: #217a52; border-color: #b8dfc9; background: #eef8f2; }
+.badge.warn { color: #d99a06; border-color: #f2dda1; background: #fff9e8; }
+.badge.bad { color: #e5383b; border-color: #f5c0c1; background: #fff1f1; }
+.live-badge { background: #eef8f2; color: #217a52; }
+
+/* Gauge */
+.gauge { position: relative; width: 100%; max-width: 380px; margin: 0 auto; }
+.gauge svg { width: 100%; display: block; }
+.gauge .mid { position: absolute; left: 0; right: 0; bottom: 6%; text-align: center; }
+.gauge .mid .stat-value { font-size: 64px; font-weight: 600; color: #111; letter-spacing: -.03em; line-height: 1; }
+.gauge .mid small { color: #5b6660; font-size: 16px; }
+.legend { display: flex; justify-content: space-between; margin-top: 16px; font-size: 15px; color: #5b6660; gap: 8px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 22px; height: 22px; border-radius: 50%; vertical-align: middle; margin-right: 6px; }
+
+/* Panel tab lain (Mahasiswa/Statistik/Riwayat/Profil) */
+.data-section, .chart-card, .rekap-box, .info-card { background: #fff; border: 0; border-radius: 28px; }
+.data-section .table-wrapper { max-height: 420px; }
+.data-section table th { background: #f7f7f7; }
+.stat-grid-5 .stat-card { background: #fff; border: 0; border-radius: 28px; padding: 24px; }
+.stat-grid-5 .stat-card .stat-value { font-size: 44px; font-weight: 500; }
+.status-pill { border-radius: 8px; }
+.icon-btn { border-radius: 50%; width: 38px; height: 38px; }
+.rank-bar-track, .rank-bar-fill { border-radius: 999px; }
+.rekap-box.aktif .rank-bar-fill { background: #217a52; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1280px) {
+  .c-stat { grid-column: span 6; }
+  .dash-main { grid-template-columns: 1fr; }
+  .dm-left { grid-template-columns: repeat(2, 1fr); }
+  .c-analytics, .c-team { grid-column: 1 / -1; }
+  .c-remind, .c-progress { grid-column: span 1; }
+  .c-remind { order: 2; } .c-progress { order: 3; } .c-team { order: 4; }
+}
+@media (max-width: 900px) {
+  body.admin-shell-page { padding: 0; }
+  .admin-shell { border-radius: 0; padding: 14px; min-height: 100vh; }
+  .side-nav { position: fixed; top: 0; left: 0; bottom: 0; height: auto; border-radius: 0 32px 32px 0; transform: translateX(-100%); }
+  .side-nav.open { transform: none; box-shadow: 0 0 60px rgba(0,0,0,.3); }
+  .side-link.active::before { left: -18px; }
+  .top-bar { padding: 12px 14px; } .top-search { height: 46px; } .circle-btn, .top-avatar { width: 46px; height: 46px; }
+  .hamburger-btn { width: 46px; height: 46px; border-radius: 50%; border: 0; background: #fff; }
+  .page-head h1 { font-size: 34px; } .page-head p { font-size: 15px; }
+  .pill-btn { height: 48px; font-size: 15px; padding: 0 20px; }
+  .content-panel { padding: 16px; }
+}
+@media (max-width: 640px) {
+  .c-stat { grid-column: span 12; }
+  .dm-left { grid-template-columns: 1fr; } .c-remind, .c-progress { grid-column: 1 / -1; }
+  .top-user, .top-search .kbd, .top-bar-actions .mailbtn { display: none; }
+  .c-stat .stat-value { font-size: 56px; }
+}
+
+/* ================================================================
+   MAHASISWA — palet & bentuk yang sama (mobile-first)
+   ================================================================ */
+body.dashboard-page { background: linear-gradient(180deg,#f2f2f2,#dcdddd); }
+.container-dashboard { border-radius: 36px; border: 0; padding: 22px 20px; }
+.container-dashboard .icon-circle { border-radius: 50%; background: transparent; border: 5px solid #217a52; color: #217a52; }
+.container-dashboard h1 { font-weight: 600; letter-spacing: -.02em; }
+.tab-bar { background: #f7f7f7; border-radius: 999px; padding: 6px; }
+.tab-btn { border-radius: 999px; font-weight: 600; }
+.tab-btn.active { color: #fff; background: linear-gradient(135deg,#14532d,#1f7a4d); box-shadow: none; }
+.today-status, .sesi-card.aktif { border-radius: 28px; }
+.today-status { background: #fff; border: 0; } .today-status.hadir { background: linear-gradient(135deg,#0f3d2a,#1f7a4d); }
+.today-status.hadir .label, .today-status.hadir .value, .today-status.hadir .time { color: #fff; }
+.container-dashboard .sesi-card { background: #f7f7f7 !important; padding: 20px !important; border-radius: 28px; }
+.container-dashboard .sesi-card.aktif { background: linear-gradient(135deg,#0f3d2a,#1f7a4d) !important; color: #fff; }
+.container-dashboard .sesi-card.aktif .sesi-title, .container-dashboard .sesi-card.aktif .sesi-mk, .container-dashboard .sesi-card.aktif .sesi-meta { color: #fff; }
+.btn-presensi, .sesi-card .btn-presensi, .btn-scan, .btn-download { border-radius: 999px !important; }
+.scanner-area { border-radius: 28px; }
+.qr-preview { border-radius: 28px; border: 0; background: #f7f7f7; }
+
