@@ -7,6 +7,7 @@ const ACTIVITY_POLL_MS = 8000; // polling aktivitas terbaru, sesuai catatan: 5-1
 const TREND_REFRESH_MS = 60000;
 
 const AState = {
+    closedSesi: {}, // sesiId -> waktu ditutup (cegah data lama membuka kartu lagi)
     userData: null,
     mahasiswaData: [],
     todayAttendance: {}, // { nim: { waktu, status } }
@@ -131,7 +132,7 @@ async function init() {
     document.getElementById('pEmail').textContent = userData.email || '-';
     if (ADOM.topGreeting) ADOM.topGreeting.textContent = `Halo, ${namaDepan} 👋 Pantau presensi mahasiswa dengan mudah.`;
     const emailEl = document.getElementById('userEmail'); if (emailEl) emailEl.textContent = userData.email || '-';
-    const avEl = document.getElementById('topAvatar'); if (avEl) avEl.innerHTML = avatarAdminImg();
+    const avEl = document.getElementById('topAvatar'); if (avEl) avEl.textContent = (namaDepan[0] || 'A').toUpperCase();
     if (ADOM.heroGreeting) ADOM.heroGreeting.textContent = `Selamat datang kembali, ${namaDepan} 👋`;
 
     setConnectionStatus('online', 'Terhubung');
@@ -179,7 +180,11 @@ async function loadActiveSesi() {
     try {
         const result = await apiGetAuth('get_active_sesi');
         if (!result.success) throw new Error(result.message || 'Gagal memuat sesi');
-        AState.sesiAktif = result.data || null;
+        let sesi = result.data || null;
+        // Abaikan data lama dari server untuk sesi yang barusan ditutup di sini
+        const closedAt = sesi && AState.closedSesi[sesi.sesiId];
+        if (closedAt && Date.now() - closedAt < 10 * 60 * 1000) sesi = null;
+        AState.sesiAktif = sesi;
         await renderSesiCard();
     } catch (error) {
         console.warn('Gagal memuat sesi aktif:', error.message);
@@ -244,6 +249,7 @@ async function createSesi() {
             return;
         }
         showStatus('Sesi presensi dibuka', 'success');
+        if (result.data && AState.closedSesi) delete AState.closedSesi[result.data.sesiId];
         AState.sesiAktif = result.data;
         renderSesiCard();
         loadStats();
@@ -261,6 +267,7 @@ async function endSesi(sesiId) {
             return;
         }
         showStatus('Sesi presensi ditutup', 'success');
+        AState.closedSesi[sesiId] = Date.now();
         AState.sesiAktif = null;
         renderSesiCard();
         loadStats();
@@ -530,7 +537,7 @@ function renderActivityFeed() {
         const ini = String(it.nama).trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
         return `
         <div class="arow">
-            <div class="av" style="background:${tints[i % tints.length]};">${avatarMahasiswaImg(it.nim, it.nama)}</div>
+            <div class="av" style="background:${tints[i % tints.length]};">${ini}</div>
             <div class="tx"><b>${it.nama}</b><small>${it.kelas} &bull; <strong>${it.waktu}</strong></small></div>
             <span class="badge ok">${it.status}</span>
         </div>`;
