@@ -183,7 +183,7 @@ body.admin-shell-page { padding: 28px; }
 .rekap-box.aktif .rank-bar-fill { background: #217a52; }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1280px) {
+@media (max-width: 1100px) {
   .c-stat { grid-column: span 6; }
   .dash-main { grid-template-columns: 1fr; }
   .dm-left { grid-template-columns: repeat(2, 1fr); }
@@ -237,7 +237,7 @@ body.admin-shell-page { padding: 28px; }
 .qr-preview img { max-width: 240px; width: 100%; border-radius: 20px; }
 .btn-download { border: 0; border-radius: 999px !important; padding: 12px 22px; background: linear-gradient(135deg,#14532d,#1f7a4d); color: #fff; font: 600 14px var(--font-sans); cursor: pointer; }
 .info-card { padding: 8px 24px; } .info-card .info-row { padding: 14px 0; font-size: 16px; }
-@media (max-width: 1280px) { .c-scan, .c-today { grid-column: 1 / -1; } .c-third { grid-column: span 4; } }
+@media (max-width: 1100px) { .c-scan, .c-today { grid-column: 1 / -1; } .c-third { grid-column: span 4; } }
 @media (max-width: 640px) { .c-third { grid-column: 1 / -1; min-height: 150px; } .c-third .stat-value { font-size: 52px; } }
 
 .side-nav .tab-btn { flex-direction: row; align-items: center; padding: 12px 16px; font-size: 16px; font-weight: 500; gap: 14px; border-radius: 14px; color: #7c8681; position: relative; margin-bottom: 2px; text-align: left; }
@@ -245,192 +245,114 @@ body.admin-shell-page { padding: 28px; }
 .side-nav .tab-btn.active { color: #111; font-weight: 600; }
 .side-nav .tab-btn.active::before { content: ''; position: absolute; left: -18px; top: 6px; bottom: 6px; width: 8px; border-radius: 0 8px 8px 0; background: #217a52; }
 
-</style>
-    <style id="responsive-fix">
 /* ================================================================
-   RESPONSIVE.CSS — dimuat SETELAH <style> tema di admin.html & mahasiswa.html
-   - Frame full-bleed (memenuhi browser)
-   - Ukuran fluid: nilai maksimum = desain asli di layar 1920px,
-     otomatis mengecil di laptop (skala Windows 125-150%)
-   - Tablet & HP: sidebar jadi drawer, layout 1 kolom
+   COMPACT — ukuran lebih kecil & fluid untuk laptop dan HP
+   (blok ini menimpa ukuran di atas; ubah angka di sini untuk menyetel)
    ================================================================ */
+body.admin-shell-page { padding: 16px; }
+.admin-shell { border-radius: 32px; padding: 16px; gap: 14px; min-height: calc(100vh - 32px); }
+.side-nav { top: 16px; height: calc(100vh - 64px); width: clamp(208px, 16vw, 236px); border-radius: 24px; padding: 16px 12px 12px; }
+.side-brand { padding: 2px 8px 10px; }
+.side-brand .icon-circle { width: 34px; height: 34px; border-width: 4px; font-size: 12px; }
+.side-brand-title { font-size: 18px; }
+.side-group-label { font-size: 11px; margin: 14px 10px 6px; }
+.side-link, .side-nav .tab-btn { padding: 9px 12px; font-size: 14px; gap: 12px; border-radius: 12px; }
+.side-link i, .side-nav .tab-btn i { font-size: 14px; width: 18px; }
+.side-link.active::before, .side-nav .tab-btn.active::before { left: -12px; width: 6px; top: 8px; bottom: 8px; }
+.side-badge { font-size: 10px; padding: 2px 7px; }
+.side-promo { padding: 14px; border-radius: 18px; margin-bottom: 8px; }
+.side-promo .pi { width: 22px; height: 22px; font-size: 10px; margin-bottom: 8px; }
+.side-promo h4 { font-size: 15px; } .side-promo p { font-size: 11px; margin-bottom: 10px; }
+.side-promo button { padding: 9px; font-size: 12px; }
+.side-status { font-size: 11.5px; }
+@media (max-height: 760px) { .side-promo { display: none; } }
 
-:root { --pad: clamp(10px, 1vw, 18px); }
-html, body { max-width: 100%; overflow-x: hidden; }
-img, svg, canvas { max-width: 100%; }
-.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.table-wrapper table { min-width: 520px; }
+.main-panel { gap: 12px; }
+.top-bar { padding: 10px 14px; border-radius: 24px; gap: 10px; }
+.top-search { height: 42px; flex-basis: 400px; } .top-search input { font-size: 13.5px; } .top-search .kbd { font-size: 11px; padding: 3px 7px; }
+.circle-btn { width: 42px; height: 42px; font-size: 14px; }
+.circle-btn .ping { top: 8px; right: 8px; }
+.top-avatar { width: 42px; height: 42px; font-size: 16px; }
+.top-user b { font-size: 14px; } .top-user small { font-size: 12px; }
+.top-bar-actions { gap: 10px; } .top-bar-actions .who { gap: 10px; }
 
-/* ---------- Full-bleed: semua layar ---------- */
-body.admin-shell-page { padding: 0; }
-.admin-shell { max-width: none; width: 100%; margin: 0; border-radius: 0; box-shadow: none;
-  padding: var(--pad); gap: var(--pad); min-height: 100vh; min-height: 100dvh; }
+.content-panel { padding: clamp(14px, 1.6vw, 20px); border-radius: 24px; }
+.page-head { margin-bottom: 16px; gap: 12px; }
+.page-head h1 { font-size: clamp(24px, 2.3vw, 32px); }
+.page-head p { font-size: 14px; margin-top: 4px; }
+.pill-btn { height: 42px; padding: 0 20px; font-size: 14px; border-width: 1.5px; gap: 8px; }
+.pill-btn.sm { height: 32px; padding: 0 14px; font-size: 12.5px; }
 
-/* ================================================================
-   DESKTOP & LAPTOP (>= 901px) — fluid
-   ================================================================ */
-@media (min-width: 901px) {
-  .side-nav { top: var(--pad); height: calc(100vh - 2 * var(--pad)); height: calc(100dvh - 2 * var(--pad));
-    width: clamp(210px, 14vw, 270px); border-radius: clamp(20px, 1.6vw, 32px);
-    padding: clamp(14px, 1.1vw, 22px) clamp(12px, .95vw, 18px); }
-  .side-brand { padding: 4px 8px clamp(8px, .9vw, 18px); }
-  .side-brand .icon-circle { width: clamp(34px, 2.3vw, 44px); height: clamp(34px, 2.3vw, 44px); border-width: clamp(4px, .26vw, 5px); font-size: clamp(12px, .78vw, 15px); }
-  .side-brand-title { font-size: clamp(16px, 1.1vw, 21px); }
-  .side-group-label { font-size: clamp(11px, .68vw, 13px); margin: clamp(12px, 1.1vw, 22px) 12px clamp(6px, .5vw, 10px); }
-  .side-link, .side-nav .tab-btn { padding: clamp(8px, .62vw, 12px) clamp(10px, .83vw, 16px); font-size: clamp(13px, .83vw, 16px); gap: clamp(10px, .73vw, 14px); border-radius: clamp(10px, .73vw, 14px); }
-  .side-link i, .side-nav .tab-btn i { font-size: clamp(13px, .83vw, 16px); width: clamp(16px, 1vw, 20px); }
-  .side-link.active::before, .side-nav .tab-btn.active::before { left: calc(-1 * clamp(12px, .95vw, 18px)); width: clamp(5px, .42vw, 8px); }
-  .side-promo { padding: clamp(12px, .94vw, 18px); border-radius: clamp(16px, 1.25vw, 24px); }
-  .side-promo h4 { font-size: clamp(15px, 1vw, 20px); }
-  .side-promo p { font-size: clamp(11px, .62vw, 12px); margin-bottom: clamp(8px, .73vw, 14px); }
-  .side-promo button { padding: clamp(9px, .62vw, 12px); font-size: clamp(12px, .68vw, 13px); }
+.bento { gap: 14px; } .dash-main, .dm-left, .dm-right { gap: 14px; }
+.card { border-radius: 22px; padding: 18px; }
+.card h3 { font-size: 16px; } .card-head { margin-bottom: 10px; }
+.c-stat { min-height: 148px; }
+.c-stat .t { font-size: 15px; padding-right: 40px; }
+.c-stat .go { width: 34px; height: 34px; top: 14px; right: 14px; font-size: 11px; }
+.c-stat .stat-value { font-size: clamp(38px, 3.6vw, 50px); }
+.c-stat .stat-value.txt { font-size: clamp(24px, 2.4vw, 32px) !important; }
+.c-stat .note { font-size: 12.5px; margin-top: 10px; }
 
-  .main-panel { gap: var(--pad); }
-  .top-bar { border-radius: clamp(20px, 1.7vw, 32px); padding: clamp(10px, .94vw, 18px) clamp(14px, 1.25vw, 24px); }
-  .top-search { height: clamp(40px, 2.9vw, 56px); flex-basis: clamp(260px, 27vw, 520px); }
-  .top-search input { font-size: clamp(13px, .78vw, 15px); }
-  .circle-btn, .top-avatar { width: clamp(40px, 2.9vw, 56px); height: clamp(40px, 2.9vw, 56px); }
-  .circle-btn { font-size: clamp(14px, .9vw, 17px); }
-  .top-avatar { font-size: clamp(15px, 1vw, 20px); }
-  .top-user b { font-size: clamp(13px, .9vw, 17px); }
-  .top-user small { font-size: clamp(11px, .73vw, 14px); }
+.caps { height: 170px; gap: 8px; }
+.cap { min-height: 40px; max-width: 64px; } .cap-col small { font-size: 13px; }
+.sesi-card { font-size: 13px; } .sesi-card .sesi-title { font-size: 12.5px; }
+.sesi-card .sesi-mk { font-size: 22px; } .sesi-card .sesi-meta { font-size: 12px; }
+.sesi-qr-box img { width: 120px; height: 120px; }
+.btn-end-sesi, .qr-input-group button { padding: 11px !important; font-size: 13px; }
+.pitem b { font-size: 14.5px; } .pitem small { font-size: 12px; } .pico { width: 34px; height: 34px; font-size: 14px; border-radius: 10px; }
+.plist { gap: 14px; }
+.activity-list { max-height: 260px; }
+.av { width: 40px; height: 40px; font-size: 14px; }
+.arow { padding: 6px 0; gap: 12px; } .arow .tx b { font-size: 15px; } .arow .tx small { font-size: 12.5px; } .badge { font-size: 11px; padding: 3px 10px; }
+.gauge { max-width: 300px; } .gauge .mid .stat-value { font-size: 40px; } .gauge .mid small { font-size: 12.5px; }
+.legend { font-size: 13px; margin-top: 12px; } .legend i { width: 16px; height: 16px; }
+.timer { font-size: clamp(30px, 2.8vw, 38px); margin-top: 8px; }
+.timer-btns button { width: 46px; height: 46px; font-size: 15px; } .timer-btns { gap: 10px; }
+.stat-grid-5 .stat-card { padding: 16px; border-radius: 22px; } .stat-grid-5 .stat-card .stat-value { font-size: 32px; }
+.data-section, .chart-card, .rekap-box, .info-card { border-radius: 22px; }
 
-  .content-panel { border-radius: clamp(20px, 1.7vw, 32px); padding: clamp(14px, 1.35vw, 26px); }
-  .page-head { margin-bottom: clamp(12px, 1.15vw, 22px); }
-  .page-head h1 { font-size: clamp(26px, 2.4vw, 46px); }
-  .page-head p { font-size: clamp(14px, 1vw, 19px); margin-top: clamp(4px, .4vw, 8px); }
-  .pill-btn { height: clamp(40px, 3.1vw, 60px); padding: 0 clamp(16px, 1.55vw, 30px); font-size: clamp(14px, 1vw, 19px); gap: clamp(6px, .5vw, 10px); border-width: clamp(1.5px, .1vw, 2px); }
-  .pill-btn.sm { height: clamp(32px, 2.1vw, 40px); padding: 0 clamp(12px, .83vw, 16px); font-size: clamp(12px, .73vw, 14px); }
+/* Mahasiswa */
+.today-status .label { font-size: 13px; } .today-status .value { font-size: clamp(24px, 2.4vw, 30px); margin: 10px 0 6px; } .today-status .time { font-size: 13px; }
+.btn-presensi, .sesi-card .btn-presensi { padding: 13px; font-size: 14px; margin-top: 10px; }
+.qr-preview img { max-width: 200px; }
+.info-card { padding: 6px 18px; } .info-card .info-row { padding: 11px 0; font-size: 14px; }
+.btn-download { padding: 10px 18px; font-size: 13px; }
 
-  .bento, .dash-main, .dm-left, .dm-right { gap: clamp(12px, .94vw, 18px); }
-  .card { border-radius: clamp(18px, 1.45vw, 28px); padding: clamp(14px, 1.25vw, 24px); }
-  .card h3 { font-size: clamp(15px, 1.1vw, 21px); }
-  .c-stat { min-height: clamp(140px, 10.9vw, 210px); }
-  .c-stat .t { font-size: clamp(14px, 1.1vw, 21px); padding-right: clamp(34px, 2.6vw, 50px); }
-  .c-stat .go { width: clamp(34px, 2.7vw, 52px); height: clamp(34px, 2.7vw, 52px); top: clamp(12px, 1vw, 20px); right: clamp(12px, 1vw, 20px); font-size: clamp(12px, .78vw, 15px); }
-  .c-stat .stat-value { font-size: clamp(38px, 3.75vw, 72px); }
-  .c-stat .note { font-size: clamp(12px, .83vw, 16px); margin-top: clamp(8px, .73vw, 14px); }
-
-  .timer { font-size: clamp(32px, 2.8vw, 54px); }
-  .timer-btns button { width: clamp(44px, 3.2vw, 62px); height: clamp(44px, 3.2vw, 62px); font-size: clamp(15px, 1vw, 20px); }
-  .caps { height: clamp(150px, 12vw, 230px); }
-  .cap { max-width: clamp(48px, 4.4vw, 84px); min-height: clamp(36px, 2.9vw, 56px); }
-  .cap-col small { font-size: clamp(12px, .9vw, 17px); }
-  .gauge .mid .stat-value { font-size: clamp(38px, 3.3vw, 64px); }
-  .gauge .mid small, .legend { font-size: clamp(12px, .8vw, 15px); }
-  .legend i { width: clamp(14px, 1.15vw, 22px); height: clamp(14px, 1.15vw, 22px); }
-  .sesi-card .sesi-mk { font-size: clamp(19px, 1.45vw, 28px); }
-  .sesi-card .sesi-title { font-size: clamp(12px, .78vw, 15px); }
-  .sesi-qr-box img { width: clamp(110px, 7.8vw, 150px); height: clamp(110px, 7.8vw, 150px); }
-
-  .pico { width: clamp(34px, 2.2vw, 42px); height: clamp(34px, 2.2vw, 42px); font-size: clamp(14px, .94vw, 18px); }
-  .pitem b { font-size: clamp(14px, .9vw, 17px); }
-  .av { width: clamp(38px, 2.7vw, 52px); height: clamp(38px, 2.7vw, 52px); font-size: clamp(13px, .9vw, 17px); }
-  .arow .tx b { font-size: clamp(14px, .94vw, 18px); }
-  .arow .tx small { font-size: clamp(12px, .73vw, 14px); }
-
-  .stat-grid-5 .stat-card { border-radius: clamp(18px, 1.45vw, 28px); padding: clamp(14px, 1.25vw, 24px); }
-  .stat-grid-5 .stat-card .stat-value { font-size: clamp(28px, 2.3vw, 44px); }
-  .data-section, .chart-card, .rekap-box, .info-card { border-radius: clamp(18px, 1.45vw, 28px); }
-  .today-status .value { font-size: clamp(28px, 2.1vw, 40px); }
-  .today-status .label { font-size: clamp(13px, .83vw, 16px); }
-  .btn-presensi, .sesi-card .btn-presensi { padding: clamp(12px, .83vw, 16px); font-size: clamp(14px, .83vw, 16px); }
-  .info-card .info-row { font-size: clamp(13px, .83vw, 16px); padding: clamp(10px, .73vw, 14px) 0; }
-}
-
-/* Layar pendek (laptop dgn taskbar/toolbar): kartu promo dipadatkan, TIDAK disembunyikan */
-@media (min-width: 901px) and (max-height: 760px) {
-  .side-promo .pi, .side-promo p { display: none; }
-  .side-promo { padding: 12px; margin-bottom: 8px; }
-  .side-promo h4 { margin-bottom: 8px; font-size: 15px; }
-  .side-promo button { padding: 8px; }
-}
-
-/* Laptop 1101-1280px: pakai layout desktop (kartu berjajar) karena ukuran sudah dikecilkan */
-@media (min-width: 1101px) and (max-width: 1280px) {
-  .c-stat { grid-column: span 3; }
-  .dash-main { grid-template-columns: 9fr 3fr; }
-  .dm-left { grid-template-columns: repeat(9, 1fr); }
-  .c-analytics { grid-column: span 6; } .c-remind { grid-column: span 3; }
-  .c-team { grid-column: span 5; } .c-progress { grid-column: span 4; }
-  .c-remind, .c-progress, .c-team { order: 0; }
-  .c-scan { grid-column: span 7; } .c-today { grid-column: span 5; } .c-third { grid-column: span 4; }
-}
-
-/* ================================================================
-   TABLET (641-900px) & HP (<=640px): sidebar = drawer
-   ================================================================ */
+/* Tablet & HP */
 @media (max-width: 900px) {
-  .side-nav { width: min(82vw, 280px); overflow-y: auto; z-index: 100; transition: transform .25s; }
-  .side-link.active::before, .side-nav .tab-btn.active::before { left: -14px; }
-  .main-panel { min-width: 0; gap: 10px; }
-  .top-bar { border-radius: 24px; gap: 10px; flex-wrap: nowrap; }
-  .hamburger-btn { flex-shrink: 0; }
-  .top-search { flex: 1 1 auto; min-width: 0; }
-  .top-user { min-width: 0; max-width: 34vw; }
-  .top-user b, .top-user small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .content-panel { border-radius: 24px; padding: 16px; }
-  .card { border-radius: 22px; padding: 16px; }
-  .bento, .dash-main, .dm-left, .dm-right { gap: 12px; }
-  .page-head h1 { font-size: 30px; }
-  .pill-btn { height: 44px; font-size: 15px; padding: 0 20px; }
-  .card h3 { font-size: 17px; }
-  .c-stat { min-height: 140px; }
-  .c-stat .t { font-size: 15px; }
-  .c-stat .stat-value { font-size: 46px; }
-  .c-stat .go { width: 36px; height: 36px; top: 14px; right: 14px; }
-  .c-third { grid-column: span 4; }
-  .c-scan, .c-today { grid-column: 1 / -1; }
-  .stat-grid-5 .stat-card .stat-value { font-size: 32px; }
-  .stat-grid-5 .stat-card { padding: 16px; border-radius: 22px; }
-  .timer { font-size: 38px; }
-  .caps { height: 170px; }
-  .cap { max-width: 56px; min-height: 40px; }
-  .gauge .mid .stat-value { font-size: 42px; }
+  body.admin-shell-page { padding: 0; }
+  .admin-shell { border-radius: 0; padding: 10px; min-height: 100vh; gap: 0; }
+  .side-nav { width: 240px; height: auto; top: 0; border-radius: 0 24px 24px 0; }
+  .top-bar { padding: 8px 10px; } .circle-btn, .top-avatar, .hamburger-btn { width: 40px; height: 40px; }
+  .top-search { height: 40px; flex-basis: auto; flex: 1; }
 }
-
 @media (max-width: 640px) {
-  .admin-shell { padding: 8px; gap: 8px; }
-  .top-bar { border-radius: 20px; padding: 8px 10px; }
-  .top-search .kbd, .top-bar-actions .mailbtn { display: none; }
-  .top-bar-actions { gap: 8px; margin-left: auto; }
-  .circle-btn, .top-avatar, .hamburger-btn { width: 42px; height: 42px; }
-  .content-panel { border-radius: 20px; padding: 12px; }
-  .page-head { margin-bottom: 12px; gap: 8px; }
-  .page-head h1 { font-size: 24px; }
-  .page-head p { font-size: 14px; }
-  .page-actions { width: 100%; gap: 8px; }
-  .page-actions .pill-btn { flex: 1 1 calc(50% - 4px); justify-content: center; padding: 0 12px; }
-  .card { border-radius: 18px; padding: 14px; }
-  .bento { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .c-stat { grid-column: span 1; min-height: 120px; }
-  .c-third { grid-column: 1 / -1; min-height: 110px; }
-  .c-third .stat-value, .c-stat .stat-value { font-size: 38px; }
-  .c-stat .t { font-size: 14px; padding-right: 30px; }
-  .c-stat .note { font-size: 12px; margin-top: 6px; }
-  .c-stat .go { width: 30px; height: 30px; top: 10px; right: 10px; font-size: 11px; }
-  .dash-main { grid-template-columns: 1fr; }
-  .dm-left { grid-template-columns: 1fr; }
-  .c-analytics, .c-team, .c-remind, .c-progress, .c-tracker { grid-column: 1 / -1; }
-  .stat-grid-5 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .stat-grid-5 .stat-card .stat-value { font-size: 26px; }
-  .timer { font-size: 34px; }
-  .caps { height: 140px; gap: 6px; }
-  .cap { max-width: 40px; min-height: 32px; }
-  .cap-col small { font-size: 11px; }
-  .gauge { max-width: 240px; }
-  .gauge .mid .stat-value { font-size: 36px; }
-  .today-status .value { font-size: 30px; }
-  .btn-presensi, .btn-scan { min-height: 46px; }
-  .av { width: 40px; height: 40px; }
-  .arow .tx b { font-size: 14px; }
+  .content-panel { padding: 12px; border-radius: 20px; }
+  .page-head h1 { font-size: 24px; } .page-head p { font-size: 13px; }
+  .page-actions { width: 100%; } .page-actions .pill-btn { flex: 1; justify-content: center; height: 40px; padding: 0 12px; font-size: 13px; }
+  .bento, .dash-main, .dm-left, .dm-right { gap: 10px; }
+  .card { padding: 14px; border-radius: 18px; }
+  .c-stat { grid-column: span 6; min-height: 118px; }
+  .c-stat .stat-value { font-size: 34px; } .c-stat .stat-value.txt { font-size: 22px !important; }
+  .c-stat .t { font-size: 13px; } .c-stat .go { width: 28px; height: 28px; top: 10px; right: 10px; } .c-stat .note { font-size: 11px; }
+  .c-third { grid-column: span 6; min-height: 118px; } .c-third:first-child { grid-column: 1 / -1; }
+  .caps { height: 130px; gap: 5px; } .cap { min-height: 30px; }
+  .top-user { display: none; }
+  .gauge { max-width: 250px; } .gauge .mid .stat-value { font-size: 32px; }
 }
+@media (min-width: 1900px) { .admin-shell { max-width: 1760px; } }
 
-@media (max-width: 380px) {
-  .page-head h1 { font-size: 21px; }
-  .page-actions .pill-btn { flex-basis: 100%; }
-  .c-stat .stat-value { font-size: 32px; }
-}
+.caps { padding-top: 28px; height: 190px; }
+@media (max-width: 640px) { .caps { height: 150px; } }
+
+/* Kode sesi manual (cadangan kalau kamera tak bisa dipakai) */
+.manual-code { display: none; margin-top: 14px; padding-top: 14px; border-top: 1px dashed #dfe5e1; }
+.manual-code small { display: block; color: #8b9590; font-size: 12.5px; margin-bottom: 8px; }
+.mc-row { display: flex; gap: 8px; }
+.mc-row input { flex: 1; min-width: 0; height: 42px; border-radius: 999px; border: 1px solid #e3e8e5; background: #f4f6f4; padding: 0 16px; font: 500 14px var(--font-sans); outline: none; }
+.mc-row input:focus { border-color: #217a52; box-shadow: 0 0 0 3px rgba(33,122,82,.14); }
+.mc-row .btn-presensi { width: auto; margin: 0; height: 42px; padding: 0 22px; }
+
 </style>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
@@ -440,7 +362,7 @@ body.admin-shell-page { padding: 0; }
 
     <aside class="side-nav" id="sideNav">
         <div class="side-brand">
-            <div class="icon-circle"><i class="fas fa-qrcode"></i></div>
+            <div class="icon-circle"><i class="fas fa-check"></i></div>
             <div class="side-brand-text"><div class="side-brand-title">Presensi</div></div>
         </div>
         <nav class="side-menu">
@@ -503,12 +425,12 @@ body.admin-shell-page { padding: 0; }
                     </div>
                     <div class="card c-stat c-third">
                         <div class="t">Kelas</div>
-                        <div class="stat-value" id="mStatKelas" style="font-size:52px;">-</div>
+                        <div class="stat-value txt" id="mStatKelas">-</div>
                         <div class="note" id="mStatJurusan">-</div>
                     </div>
                     <div class="card c-stat c-third">
                         <div class="t">Presensi Terakhir</div>
-                        <div class="stat-value" id="mStatLast" style="font-size:40px;">-</div>
+                        <div class="stat-value txt" id="mStatLast">-</div>
                         <div class="note" id="mStatLastMk">Belum ada presensi</div>
                     </div>
 
@@ -529,6 +451,14 @@ body.admin-shell-page { padding: 0; }
                         </div>
                         <div class="scanner-controls" id="scannerControls" style="display:none;">
                             <button class="btn-scan stop" id="btnCancelScan" onclick="cancelSesiScan()"><i class="fas fa-xmark"></i> Batalkan Scan</button>
+                        </div>
+
+                        <div class="manual-code" id="manualCode">
+                            <small>Kamera bermasalah? Masukkan kode sesi yang tampil di layar dosen:</small>
+                            <div class="mc-row">
+                                <input type="text" id="kodeSesiInput" placeholder="Kode sesi" autocomplete="off" autocapitalize="off" onkeydown="if(event.key==='Enter')submitKodeManual()">
+                                <button class="btn-presensi" onclick="submitKodeManual()">Kirim</button>
+                            </div>
                         </div>
                     </div>
 
@@ -596,8 +526,6 @@ body.admin-shell-page { padding: 0; }
 </div>
 
     <script src="auth.js"></script>
-    <script src="daftar-mahasiswa.js"></script>
-    <script src="avatars.js"></script>
     <script src="mahasiswa.js"></script>
 </body>
 </html>
