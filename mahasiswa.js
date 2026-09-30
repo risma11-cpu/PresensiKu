@@ -41,7 +41,7 @@ function showStatus(message, type = 'info', duration = 4000) {
     MDOM.status.className = 'status ' + type;
     MDOM.status.style.display = 'flex';
     clearTimeout(MDOM.status._hideTimeout);
-    if (type === 'success' || type === 'error') {
+    if (type !== 'info') {
         MDOM.status._hideTimeout = setTimeout(() => { MDOM.status.style.display = 'none'; }, duration);
     }
 }
@@ -76,13 +76,9 @@ async function init() {
 
     await Promise.all([loadTodayStatus(), loadActiveSesi(), loadRiwayat()]);
 
-    setInterval(loadActiveSesi, AUTO_REFRESH_MS);
-    setInterval(loadTodayStatus, AUTO_REFRESH_MS);
-
-    // Segarkan status sesi begitu tab/HP kembali dibuka (sesi bisa saja sudah ditutup admin)
-    document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) { loadActiveSesi(); loadTodayStatus(); }
-    });
+    const pollIfIdle = fn => () => { if (!document.hidden && !MState.isProcessing) fn(); };
+    setInterval(pollIfIdle(loadActiveSesi), AUTO_REFRESH_MS);
+    setInterval(pollIfIdle(loadTodayStatus), 60000);
 }
 
 function renderProfile(u) {
@@ -95,7 +91,7 @@ function renderProfile(u) {
     document.getElementById('pEmail').textContent = u.email || '-';
     const setT = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
     setT('userEmail', u.email || '-');
-    setT('topAvatar', ((u.nama || 'M').trim()[0] || 'M').toUpperCase());
+    const _av = document.getElementById('topAvatar'); if (_av) _av.innerHTML = avatarMahasiswaImg(u.nim, u.nama);
     setT('mStatKelas', u.kelas || '-');
     setT('mStatJurusan', u.jurusan || '-');
 }
@@ -159,10 +155,21 @@ async function loadActiveSesi() {
     }
 }
 
+function parseSesiTime(sesi) {
+    const m = String((sesi && sesi.sesiId) || '').match(/^SES-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+    if (m) return new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    const d = new Date(sesi && sesi.waktuDibuat);
+    return (isNaN(d) || d.getFullYear() < 2000) ? null : d;
+}
+
+function formatWaktuSesi(sesi) {
+    const d = parseSesiTime(sesi);
+    if (!d) return '';
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 function renderSesiCard() {
     const sesi = MState.sesiAktif;
-    const manual = document.getElementById('manualCode');
-    if (manual) manual.style.display = sesi ? 'block' : 'none';
     if (!sesi) {
         MDOM.sesiCard.className = 'sesi-card kosong';
         MDOM.sesiCard.innerHTML = '<i class="fas fa-circle-info"></i> Belum ada sesi presensi aktif saat ini.';
@@ -174,7 +181,7 @@ function renderSesiCard() {
     MDOM.sesiCard.innerHTML = `
         <div class="sesi-title"><i class="fas fa-broadcast-tower"></i> Sesi Presensi Aktif</div>
         <div class="sesi-mk">${sesi.mataKuliah || '-'}</div>
-        <div class="sesi-meta">Dibuka oleh ${sesi.dosen || '-'} &bull; ${sesi.waktuDibuat || ''}</div>
+        <div class="sesi-meta">Dibuka oleh ${sesi.dosen || '-'} &bull; ${formatWaktuSesi(sesi)}</div>
         <button class="btn-presensi" id="btnMulaiScan" onclick="startSesiScan()">
             <i class="fas fa-qrcode"></i> Scan QR Sesi Sekarang
         </button>
@@ -184,83 +191,60 @@ function renderSesiCard() {
 // ================================================================
 // SCAN QR SESI -> PRESENSI
 // ================================================================
-// Ambil teks error dari Error / string / objek (library scanner menolak dengan string)
-function errMsg(e) {
-    if (!e) return 'Tidak diketahui';
-    if (typeof e === 'string') return e;
-    return e.message || e.name || String(e);
+let scannerStarting = false;
+
+function cameraErrorMessage(err) {
+    const text = err && err.message ? (err.name + ' ' + err.message) : String(err || '');
+    if (/NotAllowed|permission|denied/i.test(text))
+        return 'Izin kamera ditolak. Ketuk ikon gembok di address bar → Izin → Kamera → Izinkan, lalu muat ulang halaman.';
+    if (/NotFound|no camera|requested device not found/i.test(text))
+        return 'Kamera tidak ditemukan di perangkat ini.';
+    if (/NotReadable|in use|could not start|Starting videoinput failed/i.test(text))
+        return 'Kamera sedang dipakai aplikasi lain. Tutup aplikasi itu lalu coba lagi.';
+    if (!window.isSecureContext)
+        return 'Kamera hanya bisa jalan lewat HTTPS.';
+    return 'Gagal akses kamera: ' + text;
 }
 
-function camErr(e) {
-    const s = errMsg(e);
-    if (/NotAllowed|Permission|denied/i.test(s)) return 'Izin kamera ditolak. Izinkan akses kamera di browser lalu coba lagi.';
-    if (/NotFound|device not found/i.test(s)) return 'Kamera tidak ditemukan di perangkat ini.';
-    if (/NotReadable|in use|Could not start/i.test(s)) return 'Kamera sedang dipakai aplikasi lain.';
-    return s;
-}
-
-function focusKodeManual() {
-    const el = document.getElementById('kodeSesiInput');
-    if (el) el.focus();
-}
-
-function startSesiScan() {
+async function startSesiScan() {
     if (!MState.sesiAktif) {
         showStatus('Tidak ada sesi presensi aktif', 'warning');
         return;
     }
-    if (typeof Html5Qrcode === 'undefined') {
-        showStatus('Library scanner gagal dimuat (cek koneksi internet). Pakai kode sesi manual.', 'warning', 8000);
-        focusKodeManual();
-        return;
-    }
-    if (!window.isSecureContext || !navigator.mediaDevices) {
-        showStatus('Kamera hanya bisa dipakai lewat HTTPS atau localhost. Pakai kode sesi manual di bawah.', 'warning', 9000);
-        focusKodeManual();
-        return;
-    }
+    if (MState.scannerRunning || scannerStarting) return;
+    scannerStarting = true;
+
     MDOM.scannerArea.style.display = 'block';
     MDOM.scannerControls.style.display = 'flex';
 
     const readerElement = document.getElementById('qr-reader');
-    readerElement.innerHTML = '';
+    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+    let lastErr = null;
 
-    try {
-        MState.html5QrCode = new Html5Qrcode('qr-reader', {
-            verbose: false,
-            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-        });
-
-        const config = { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0 };
-
-        MState.html5QrCode.start({ facingMode: 'environment' }, config, onSesiScanSuccess, () => {})
-            .then(() => {
-                MState.scannerRunning = true;
-                MDOM.scanStatusText.textContent = 'Arahkan ke QR Sesi';
-            })
-            .catch(() => {
-                MState.html5QrCode.start({ facingMode: 'user' }, config, onSesiScanSuccess, () => {})
-                    .then(() => { MState.scannerRunning = true; })
-                    .catch((err2) => {
-                        showStatus('Gagal akses kamera: ' + camErr(err2) + ' Kamu bisa pakai kode sesi manual.', 'error', 8000);
-                        cancelSesiScan();
-                    });
+    for (const cam of [{ facingMode: 'environment' }, { facingMode: 'user' }]) {
+        try {
+            readerElement.innerHTML = '';
+            MState.html5QrCode = new Html5Qrcode('qr-reader', {
+                verbose: false,
+                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
             });
-    } catch (error) {
-        showStatus('Gagal inisialisasi scanner: ' + errMsg(error), 'error');
-        cancelSesiScan();
+            await MState.html5QrCode.start(cam, config, onSesiScanSuccess, () => {});
+            MState.scannerRunning = true;
+            MDOM.scanStatusText.textContent = 'Arahkan ke QR Sesi';
+            scannerStarting = false;
+            return;
+        } catch (err) {
+            lastErr = err;
+            console.warn('Kamera gagal:', cam, err);
+            try { MState.html5QrCode.clear(); } catch (e) {}
+            if (/NotAllowed|permission|denied/i.test(String(err && err.name ? err.name + err.message : err))) break;
+        }
     }
-}
 
-// Presensi lewat kode sesi yang diketik (cadangan kalau kamera tidak bisa dipakai)
-async function submitKodeManual() {
-    const el = document.getElementById('kodeSesiInput');
-    const kode = el ? el.value.trim() : '';
-    if (!kode) { showStatus('Isi kode sesi dulu', 'warning'); return; }
-    if (MState.isProcessing) return;
-    MState.isProcessing = true;
-    await processPresensiSesi(kode);
-    if (el) el.value = '';
+    scannerStarting = false;
+    MState.html5QrCode = null;
+    showStatus(cameraErrorMessage(lastErr), 'error', 9000);
+    cancelSesiScan();
 }
 
 function cancelSesiScan() {
@@ -311,13 +295,12 @@ async function processPresensiSesi(qrData) {
 
         if (!result.success) {
             showStatus(result.message || 'Gagal menyimpan presensi', result.alreadyPresent ? 'warning' : 'error');
-            loadActiveSesi(); // sesi mungkin sudah ditutup admin -> segarkan kartu sesi
         } else {
             showStatus('Presensi berhasil dicatat!', 'success');
             loadTodayStatus();
         }
     } catch (error) {
-        showStatus('Error: ' + errMsg(error), 'error');
+        showStatus('Error: ' + error.message, 'error');
     } finally {
         MState.isProcessing = false;
         setTimeout(cancelSesiScan, 1500);
