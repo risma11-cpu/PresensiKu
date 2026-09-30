@@ -3,7 +3,7 @@
 // (login.html, mahasiswa.html, admin.html)
 // ================================================================
 
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxUPMX5pjBduZr0yXFhiZlDXgPA3fs5gTnxhZ5-aBDJrBtPwLL1LKigK1UhChT4GSku/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbyfuZ8g94s5isg7kx8t3wAzj0vLwOW3ytDx4HRZvAcctT-V6B6rYaylQwwhByUWf81I/exec';
 const SESSION_KEY = 'presensi_session'; // { token, role, userData }
 
 // ================================================================
