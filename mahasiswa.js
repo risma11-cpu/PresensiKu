@@ -69,6 +69,7 @@ async function init() {
     if (!userData) return; // requireAuth sudah redirect kalau gagal
 
     MState.userData = userData;
+    injectManualStyles();
     renderProfile(userData);
     generateIdentityQR(userData);
 
@@ -143,13 +144,55 @@ async function loadTodayStatus() {
 // ================================================================
 // SESI AKTIF
 // ================================================================
+let lastRenderedSesiId; // undefined = belum pernah render
+
+function injectManualStyles() {
+    if (document.getElementById('manualSesiStyle')) return;
+    const st = document.createElement('style');
+    st.id = 'manualSesiStyle';
+    st.textContent = `
+        .sesi-manual { margin-top: 14px; padding-top: 14px; border-top: 1px dashed rgba(0,0,0,.18); }
+        .sesi-manual p { font-size: 13px; opacity: .7; margin: 0 0 8px; }
+        .sesi-manual-row { display: flex; gap: 8px; }
+        .sesi-manual-row input { flex: 1; min-width: 0; padding: 12px 16px; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; font: inherit; font-size: 14px; background: #f4f5f2; text-transform: uppercase; }
+        .sesi-manual-row button { padding: 0 22px; border: 0; border-radius: 999px; background: hsl(var(--primary, 150 60% 25%)); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
+        .sesi-manual-row button:disabled { opacity: .6; cursor: not-allowed; }
+    `;
+    document.head.appendChild(st);
+}
+
+async function submitKodeManual() {
+    if (MState.isProcessing) return;
+    const input = document.getElementById('inputKodeSesi');
+    const btn = document.getElementById('btnKirimKode');
+    const kode = input ? input.value.trim().toUpperCase() : '';
+
+    if (!MState.sesiAktif) {
+        showStatus('Tidak ada sesi presensi aktif', 'warning');
+        return;
+    }
+    if (!kode) {
+        showStatus('Masukkan kode sesi dulu', 'warning');
+        return;
+    }
+
+    MState.isProcessing = true;
+    if (btn) { btn.disabled = true; btn.textContent = 'Memproses...'; }
+    try {
+        await processPresensiSesi(kode);
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = 'Kirim'; }
+    }
+}
+
 async function loadActiveSesi() {
     try {
         const result = await apiGetAuth('get_active_sesi');
         if (!result.success) throw new Error(result.message || 'Gagal memuat sesi');
 
         MState.sesiAktif = result.data || null;
-        renderSesiCard();
+        const newId = MState.sesiAktif ? MState.sesiAktif.sesiId : null;
+        if (newId !== lastRenderedSesiId) renderSesiCard();
     } catch (error) {
         console.warn('Gagal memuat sesi aktif:', error.message);
     }
@@ -170,6 +213,7 @@ function formatWaktuSesi(sesi) {
 
 function renderSesiCard() {
     const sesi = MState.sesiAktif;
+    lastRenderedSesiId = sesi ? sesi.sesiId : null;
     if (!sesi) {
         MDOM.sesiCard.className = 'sesi-card kosong';
         MDOM.sesiCard.innerHTML = '<i class="fas fa-circle-info"></i> Belum ada sesi presensi aktif saat ini.';
@@ -185,6 +229,13 @@ function renderSesiCard() {
         <button class="btn-presensi" id="btnMulaiScan" onclick="startSesiScan()">
             <i class="fas fa-qrcode"></i> Scan QR Sesi Sekarang
         </button>
+        <div class="sesi-manual">
+            <p>Kamera bermasalah? Masukkan kode sesi yang tampil di layar dosen:</p>
+            <div class="sesi-manual-row">
+                <input type="text" id="inputKodeSesi" placeholder="SES-TTTTBBHH-JJMMDD" autocomplete="off" autocapitalize="characters" spellcheck="false" onkeydown="if (event.key === 'Enter') submitKodeManual();">
+                <button type="button" id="btnKirimKode" onclick="submitKodeManual()">Kirim</button>
+            </div>
+        </div>
     `;
 }
 
