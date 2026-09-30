@@ -42,6 +42,38 @@ function getRole() {
 // ================================================================
 // API HELPERS
 // ================================================================
+// Sheets menyimpan jam (mis. 21:10:50) sebagai tanggal 1899, sehingga tampil
+// "Sat Dec 30 1899 21:10:50 GMT+0707 (...)". Fungsi ini mengambil jam-nya saja
+// dari SEMUA respons API, jadi berlaku di semua halaman.
+const RE_JAM_1899 = /\b1899\b.*?(\d{1,2}:\d{2}:\d{2})/;
+function fixSheetTimes(v) {
+    if (typeof v === 'string') {
+        const m = RE_JAM_1899.exec(v);
+        return m ? m[1].padStart(8, '0') : v;
+    }
+    if (Array.isArray(v)) return v.map(fixSheetTimes);
+    if (v && typeof v === 'object') {
+        const o = {};
+        for (const k in v) o[k] = fixSheetTimes(v[k]);
+        return o;
+    }
+    return v;
+}
+
+// Waktu buka sesi sebagai Date (diambil dari sesiId: SES-YYYYMMDD-HHmmss)
+function parseSesiTime(sesi) {
+    const m = String((sesi && sesi.sesiId) || '').match(/^SES-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
+    if (m) return new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    const d = new Date(sesi && sesi.waktuDibuat);
+    return (isNaN(d) || d.getFullYear() < 2000) ? null : d;
+}
+
+function formatWaktuSesi(sesi) {
+    const d = parseSesiTime(sesi);
+    if (!d) return '';
+    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 // Apps Script bisa "tidur" (cold start) dan butuh 10-30 dtk untuk request pertama,
 // jadi batas waktu dinaikkan dan request aman-diulang otomatis 1x kalau timeout.
 const API_TIMEOUT_MS = 35000;
@@ -60,7 +92,7 @@ async function apiGet(action, params = {}) {
             signal: AbortSignal.timeout(API_TIMEOUT_MS)
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
+        return fixSheetTimes(await response.json());
     };
     try { return await run(); }
     catch (e) { if (isRetryableError(e)) return run(); throw e; }
@@ -76,7 +108,7 @@ async function apiPost(action, body = {}, retry = false) {
             signal: AbortSignal.timeout(API_TIMEOUT_MS)
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        return response.json();
+        return fixSheetTimes(await response.json());
     };
     try { return await run(); }
     catch (e) { if (retry && isRetryableError(e)) return run(); throw e; }
@@ -176,16 +208,4 @@ function redirectByRole(role) {
 // supaya saat user menekan Login server sudah siap (hasilnya diabaikan).
 if (/login\.html$|\/$/.test(location.pathname)) {
     try { fetch(WEB_APP_URL + '?action=ping', { mode: 'no-cors' }).catch(() => {}); } catch (e) {}
-}
-function parseSesiTime(sesi) {
-    const m = String((sesi && sesi.sesiId) || '').match(/^SES-(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/);
-    if (m) return new Date(+m[1], m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
-    const d = new Date(sesi && sesi.waktuDibuat);
-    return (isNaN(d) || d.getFullYear() < 2000) ? null : d;
-}
-
-function formatWaktuSesi(sesi) {
-    const d = parseSesiTime(sesi);
-    if (!d) return '';
-    return d.toLocaleString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
