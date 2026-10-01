@@ -157,6 +157,8 @@ function injectManualStyles() {
         .sesi-manual-row input { flex: 1; min-width: 0; padding: 12px 16px; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; font: inherit; font-size: 14px; background: #f4f5f2; text-transform: uppercase; }
         .sesi-manual-row button { padding: 0 22px; border: 0; border-radius: 999px; background: hsl(var(--primary, 150 60% 25%)); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
         .sesi-manual-row button:disabled { opacity: .6; cursor: not-allowed; }
+        .scanner-area { max-width: 320px; margin-left: auto; margin-right: auto; }
+        .scanner-overlay .scan-frame { width: 75% !important; height: auto !important; aspect-ratio: 1 / 1; }
         .btn-foto-qr { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 12px; border: 1.5px solid hsl(var(--primary, 150 60% 25%)); border-radius: 999px; color: hsl(var(--primary, 150 60% 25%)); font-weight: 600; font-size: 14px; cursor: pointer; }
     `;
     document.head.appendChild(st);
@@ -302,17 +304,14 @@ async function startSesiScan() {
     MDOM.scannerControls.style.display = 'flex';
 
     const readerElement = document.getElementById('qr-reader');
-    // Area baca = 80% layar kamera (bukan kotak kecil 220px) dan resolusi lebih tinggi.
-    const qrboxFn = (vw, vh) => {
-        const sisi = Math.max(50, Math.floor(Math.min(vw, vh) * 0.8));
-        return { width: sisi, height: sisi };
-    };
-    const baseCfg = { fps: 10, qrbox: qrboxFn };
-    const hiCfg = { ...baseCfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
+    // Kamera dibuat persegi (1:1) dan area baca = 75% lebarnya, sama dengan bingkai di layar.
+    const box = Math.max(150, Math.min(280, Math.floor((readerElement.clientWidth || 300) * 0.75)));
+    const cfgSquare = { fps: 10, qrbox: { width: box, height: box }, aspectRatio: 1.0 };
+    const cfgPlain = { fps: 10, qrbox: { width: box, height: box } };
     const attempts = [
-        { cam: { facingMode: 'environment' }, cfg: hiCfg },
-        { cam: { facingMode: 'environment' }, cfg: baseCfg },
-        { cam: { facingMode: 'user' }, cfg: baseCfg }
+        { cam: { facingMode: 'environment' }, cfg: cfgSquare },
+        { cam: { facingMode: 'environment' }, cfg: cfgPlain },
+        { cam: { facingMode: 'user' }, cfg: cfgPlain }
     ];
     let lastErr = null;
 
@@ -327,6 +326,12 @@ async function startSesiScan() {
             MState.scannerRunning = true;
             MDOM.scanStatusText.textContent = 'Arahkan ke QR Sesi';
             scannerStarting = false;
+            clearTimeout(MState.scanHintTimer);
+            MState.scanHintTimer = setTimeout(() => {
+                if (MState.scannerRunning && !MState.isProcessing) {
+                    showStatus('Belum terbaca? Atur jarak HP 20–30 cm dari layar, atau pakai tombol Foto QR / ketik kode sesi.', 'warning', 7000);
+                }
+            }, 12000);
             return;
         } catch (err) {
             lastErr = err;
@@ -343,6 +348,7 @@ async function startSesiScan() {
 }
 
 function cancelSesiScan() {
+    clearTimeout(MState.scanHintTimer);
     if (MState.html5QrCode && MState.scannerRunning) {
         MState.html5QrCode.stop().then(() => {
             MState.html5QrCode.clear();
@@ -371,7 +377,7 @@ function extractSesiId(qrData) {
 let lastBukanSesiHint = 0;
 
 async function onSesiScanSuccess(decodedText) {
-    if (MState.isProcessing) return;
+    if (MState.isProcessing || !MState.scannerRunning) return; // sudah diproses / kamera sudah berhenti
 
     // QR kosong / QR lain: abaikan, kamera tetap menyala (jangan tampilkan error)
     const sesiId = extractSesiId(decodedText);
