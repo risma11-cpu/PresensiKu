@@ -302,13 +302,12 @@ async function startSesiScan() {
     MDOM.scannerControls.style.display = 'flex';
 
     const readerElement = document.getElementById('qr-reader');
-    // Area baca = 80% layar kamera (bukan kotak kecil 220px), resolusi lebih tinggi,
-    // dan pakai pembaca QR bawaan browser kalau ada (lebih cepat & akurat).
+    // Area baca = 80% layar kamera (bukan kotak kecil 220px) dan resolusi lebih tinggi.
     const qrboxFn = (vw, vh) => {
         const sisi = Math.max(50, Math.floor(Math.min(vw, vh) * 0.8));
         return { width: sisi, height: sisi };
     };
-    const baseCfg = { fps: 15, qrbox: qrboxFn, disableFlip: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+    const baseCfg = { fps: 10, qrbox: qrboxFn };
     const hiCfg = { ...baseCfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
     const attempts = [
         { cam: { facingMode: 'environment' }, cfg: hiCfg },
@@ -357,8 +356,34 @@ function cancelSesiScan() {
     MDOM.scannerControls.style.display = 'none';
 }
 
+// Ambil sesiId dari isi QR: JSON {"sesiId":"SES-..."} atau teks "SES-..." langsung.
+// Hasil kosong = bukan QR sesi.
+function extractSesiId(qrData) {
+    const raw = String(qrData == null ? '' : qrData).trim();
+    if (!raw) return '';
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object') return String(parsed.sesiId || '').trim();
+    } catch (e) { /* bukan JSON */ }
+    return /^SES-/i.test(raw) ? raw.toUpperCase() : '';
+}
+
+let lastBukanSesiHint = 0;
+
 async function onSesiScanSuccess(decodedText) {
     if (MState.isProcessing) return;
+
+    // QR kosong / QR lain: abaikan, kamera tetap menyala (jangan tampilkan error)
+    const sesiId = extractSesiId(decodedText);
+    if (!sesiId) {
+        const now = Date.now();
+        if (String(decodedText || '').trim() && now - lastBukanSesiHint > 4000) {
+            lastBukanSesiHint = now;
+            showStatus('Itu bukan QR sesi presensi. Arahkan ke QR di layar dosen.', 'warning', 3000);
+        }
+        return;
+    }
+
     MState.isProcessing = true;
 
     // Matikan kamera sampai benar-benar berhenti, baru kirim presensi
@@ -369,7 +394,7 @@ async function onSesiScanSuccess(decodedText) {
     } catch (e) { /* abaikan */ }
     MState.scannerRunning = false;
 
-    processPresensiSesi(decodedText);
+    processPresensiSesi(sesiId);
 }
 
 function describeError(e) {
@@ -380,17 +405,10 @@ function describeError(e) {
 
 async function processPresensiSesi(qrData) {
     try {
-        let sesiId = '';
-        const raw = String(qrData == null ? '' : qrData).trim();
-        try {
-            const parsed = JSON.parse(raw);
-            sesiId = (parsed && typeof parsed === 'object') ? String(parsed.sesiId || '') : raw;
-        } catch (e) {
-            sesiId = raw;
-        }
+        const sesiId = extractSesiId(qrData);
 
         if (!sesiId) {
-            showStatus('QR tidak valid', 'error');
+            showStatus('Kode sesi tidak valid. Contoh: SES-20260929-210814', 'error');
             MState.isProcessing = false;
             cancelSesiScan();
             return;
