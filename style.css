@@ -815,3 +815,11 @@ body.admin-shell-page {
 .top-user-name { font-size: 12.5px; font-weight: 600; color: hsl(var(--foreground)); white-space: nowrap; }
 @media (max-width: 700px) { .top-user-name { display: none; } }
 .persen-low { color: hsl(var(--destructive)); font-weight: 700; }
+.sesi-qr-box img {
+    width: min(100%, 240px) !important;
+    height: auto !important;
+    aspect-ratio: 1 / 1;
+    box-sizing: border-box;
+    padding: 10px !important;
+    background: #fff !important;
+}
