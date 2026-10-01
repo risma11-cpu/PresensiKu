@@ -157,8 +157,36 @@ function injectManualStyles() {
         .sesi-manual-row input { flex: 1; min-width: 0; padding: 12px 16px; border: 1px solid rgba(0,0,0,.12); border-radius: 999px; font: inherit; font-size: 14px; background: #f4f5f2; text-transform: uppercase; }
         .sesi-manual-row button { padding: 0 22px; border: 0; border-radius: 999px; background: hsl(var(--primary, 150 60% 25%)); color: #fff; font: inherit; font-weight: 600; cursor: pointer; }
         .sesi-manual-row button:disabled { opacity: .6; cursor: not-allowed; }
+        .btn-foto-qr { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px; padding: 12px; border: 1.5px solid hsl(var(--primary, 150 60% 25%)); border-radius: 999px; color: hsl(var(--primary, 150 60% 25%)); font-weight: 600; font-size: 14px; cursor: pointer; }
     `;
     document.head.appendChild(st);
+}
+
+async function scanFromFoto(input) {
+    const file = input.files && input.files[0];
+    input.value = '';
+    if (!file || MState.isProcessing) return;
+    if (!MState.sesiAktif) {
+        showStatus('Tidak ada sesi presensi aktif', 'warning');
+        return;
+    }
+
+    MState.isProcessing = true;
+    showStatus('Membaca QR dari foto...', 'info');
+    let text = '';
+    try {
+        const reader = new Html5Qrcode('qr-file-reader', {
+            verbose: false,
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+        });
+        text = await reader.scanFile(file, false);
+        try { reader.clear(); } catch (e) {}
+    } catch (err) {
+        MState.isProcessing = false;
+        showStatus('QR tidak terbaca di foto. Ulangi: QR harus memenuhi layar dan tidak buram, atau ketik kodenya.', 'error', 8000);
+        return;
+    }
+    await processPresensiSesi(text);
 }
 
 async function submitKodeManual() {
@@ -235,6 +263,9 @@ function renderSesiCard() {
                 <input type="text" id="inputKodeSesi" placeholder="SES-TTTTBBHH-JJMMDD" autocomplete="off" autocapitalize="characters" spellcheck="false" onkeydown="if (event.key === 'Enter') submitKodeManual();">
                 <button type="button" id="btnKirimKode" onclick="submitKodeManual()">Kirim</button>
             </div>
+            <label class="btn-foto-qr" for="inputFotoQr"><i class="fas fa-camera"></i> Foto QR pakai kamera HP</label>
+            <input type="file" id="inputFotoQr" accept="image/*" capture="environment" style="display:none" onchange="scanFromFoto(this)">
+            <div id="qr-file-reader" style="display:none"></div>
         </div>
     `;
 }
@@ -246,6 +277,8 @@ let scannerStarting = false;
 
 function cameraErrorMessage(err) {
     const text = err && err.message ? (err.name + ' ' + err.message) : String(err || '');
+    if (/Html5Qrcode.*(not defined|undefined)|ReferenceError/i.test(text))
+        return 'Library scanner belum termuat. Cek internet lalu muat ulang halaman.';
     if (/NotAllowed|permission|denied/i.test(text))
         return 'Izin kamera ditolak. Ketuk ikon gembok di address bar → Izin → Kamera → Izinkan, lalu muat ulang halaman.';
     if (/NotFound|no camera|requested device not found/i.test(text))
@@ -269,17 +302,29 @@ async function startSesiScan() {
     MDOM.scannerControls.style.display = 'flex';
 
     const readerElement = document.getElementById('qr-reader');
-    const config = { fps: 10, qrbox: { width: 220, height: 220 } };
+    // Area baca = 80% layar kamera (bukan kotak kecil 220px), resolusi lebih tinggi,
+    // dan pakai pembaca QR bawaan browser kalau ada (lebih cepat & akurat).
+    const qrboxFn = (vw, vh) => {
+        const sisi = Math.max(50, Math.floor(Math.min(vw, vh) * 0.8));
+        return { width: sisi, height: sisi };
+    };
+    const baseCfg = { fps: 15, qrbox: qrboxFn, disableFlip: true, experimentalFeatures: { useBarCodeDetectorIfSupported: true } };
+    const hiCfg = { ...baseCfg, videoConstraints: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } };
+    const attempts = [
+        { cam: { facingMode: 'environment' }, cfg: hiCfg },
+        { cam: { facingMode: 'environment' }, cfg: baseCfg },
+        { cam: { facingMode: 'user' }, cfg: baseCfg }
+    ];
     let lastErr = null;
 
-    for (const cam of [{ facingMode: 'environment' }, { facingMode: 'user' }]) {
+    for (const { cam, cfg } of attempts) {
         try {
             readerElement.innerHTML = '';
             MState.html5QrCode = new Html5Qrcode('qr-reader', {
                 verbose: false,
                 formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
             });
-            await MState.html5QrCode.start(cam, config, onSesiScanSuccess, () => {});
+            await MState.html5QrCode.start(cam, cfg, onSesiScanSuccess, () => {});
             MState.scannerRunning = true;
             MDOM.scanStatusText.textContent = 'Arahkan ke QR Sesi';
             scannerStarting = false;
@@ -312,25 +357,36 @@ function cancelSesiScan() {
     MDOM.scannerControls.style.display = 'none';
 }
 
-function onSesiScanSuccess(decodedText) {
+async function onSesiScanSuccess(decodedText) {
     if (MState.isProcessing) return;
     MState.isProcessing = true;
 
-    if (MState.html5QrCode && MState.scannerRunning) {
-        MState.html5QrCode.stop().then(() => { MState.scannerRunning = false; }).catch(() => {});
-    }
+    // Matikan kamera sampai benar-benar berhenti, baru kirim presensi
+    try {
+        if (MState.html5QrCode && MState.scannerRunning) {
+            await MState.html5QrCode.stop();
+        }
+    } catch (e) { /* abaikan */ }
+    MState.scannerRunning = false;
 
     processPresensiSesi(decodedText);
+}
+
+function describeError(e) {
+    if (!e) return 'tidak diketahui';
+    if (typeof e === 'string') return e;
+    return e.message || e.name || String(e);
 }
 
 async function processPresensiSesi(qrData) {
     try {
         let sesiId = '';
+        const raw = String(qrData == null ? '' : qrData).trim();
         try {
-            const parsed = JSON.parse(qrData);
-            sesiId = parsed.sesiId || '';
+            const parsed = JSON.parse(raw);
+            sesiId = (parsed && typeof parsed === 'object') ? String(parsed.sesiId || '') : raw;
         } catch (e) {
-            sesiId = qrData.trim();
+            sesiId = raw;
         }
 
         if (!sesiId) {
@@ -351,7 +407,8 @@ async function processPresensiSesi(qrData) {
             loadTodayStatus();
         }
     } catch (error) {
-        showStatus('Error: ' + error.message, 'error');
+        console.error('Presensi gagal:', error);
+        showStatus('Error: ' + describeError(error), 'error', 8000);
     } finally {
         MState.isProcessing = false;
         setTimeout(cancelSesiScan, 1500);
