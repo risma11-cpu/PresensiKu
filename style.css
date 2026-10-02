@@ -291,11 +291,11 @@ h1 { color: hsl(var(--foreground)); font-size: 18px; font-weight: 700; line-heig
   width: 100%;
 }
 
-#qr-reader { width: 100% !important; min-height: 260px; position: relative; }
-#qr-reader video { width: 100% !important; height: auto !important; border-radius: 0 !important; display: block !important; }
-#qr-reader > div:not(:first-child) { display: none !important; }
+#qr-reader { width: 100% !important; min-height: 260px; position: relative; overflow: hidden; }
+#qr-reader video { width: 100% !important; height: 100% !important; object-fit: cover; border-radius: 0 !important; display: block !important; }
+#qr-reader > div:not(:first-child) { display: block !important; }
 #qr-reader > div:first-child,
-#qr-reader > div:first-child > div:first-child { width: 100% !important; height: auto !important; }
+#qr-reader > div:first-child > div:first-child { width: 100% !important; height: 100% !important; }
 
 .scanner-overlay { position: absolute; inset: 0; pointer-events: none; z-index: 10; }
 
