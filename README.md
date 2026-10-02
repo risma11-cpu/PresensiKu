@@ -201,14 +201,6 @@ Semua endpoint lewat satu URL Web App. Aksi dikirim lewat parameter `action`.
 
 ---
 
-## 📸 Tampilan
-
-> Tambahkan screenshot di folder `docs/` lalu tampilkan di sini:
->
-> `![Dashboard Admin](docs/admin.png)` &nbsp; `![Dashboard Mahasiswa](docs/mahasiswa.png)`
-
----
-
 ## 👤 Pembuat
 
 **[Rismatur Rahmi]** — [@risma11-cpu-github](https://github.com/risma11-cpu-github)
