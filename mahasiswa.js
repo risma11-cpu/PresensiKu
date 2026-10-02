@@ -304,14 +304,12 @@ async function startSesiScan() {
     MDOM.scannerControls.style.display = 'flex';
 
     const readerElement = document.getElementById('qr-reader');
-    // Kamera dibuat persegi (1:1) dan area baca = 75% lebarnya, sama dengan bingkai di layar.
-    const box = Math.max(150, Math.min(280, Math.floor((readerElement.clientWidth || 300) * 0.75)));
-    const cfgSquare = { fps: 10, qrbox: { width: box, height: box }, aspectRatio: 1.0 };
-    const cfgPlain = { fps: 10, qrbox: { width: box, height: box } };
+    const box = Math.max(180, Math.min(260, Math.floor((readerElement.clientWidth || 300) * 0.72)));
+    const baseCfg = { fps: 10, qrbox: { width: box, height: box }, disableFlip: false };
     const attempts = [
-        { cam: { facingMode: 'environment' }, cfg: cfgSquare },
-        { cam: { facingMode: 'environment' }, cfg: cfgPlain },
-        { cam: { facingMode: 'user' }, cfg: cfgPlain }
+        { cam: { facingMode: { ideal: 'environment' } }, cfg: baseCfg },
+        { cam: { facingMode: 'environment' }, cfg: baseCfg },
+        { cam: { facingMode: 'user' }, cfg: baseCfg }
     ];
     let lastErr = null;
 
@@ -377,7 +375,7 @@ function extractSesiId(qrData) {
 let lastBukanSesiHint = 0;
 
 async function onSesiScanSuccess(decodedText) {
-    if (MState.isProcessing || !MState.scannerRunning) return; // sudah diproses / kamera sudah berhenti
+    if (MState.isProcessing) return;
 
     // QR kosong / QR lain: abaikan, kamera tetap menyala (jangan tampilkan error)
     const sesiId = extractSesiId(decodedText);
