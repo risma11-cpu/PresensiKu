@@ -492,24 +492,27 @@ body.admin-shell-page { padding: 0; }
         <!-- ===== MAIN CONTENT ===== -->
         <main class="main-panel">
 
-            <header class="top-bar">
-                <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <div class="input-field top-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" id="globalSearch" placeholder="Cari NIM / nama mahasiswa" oninput="handleGlobalSearch()">
-                    <span class="kbd">Ctrl K</span>
-                </div>
-                <div class="top-bar-actions">
-                    <button class="circle-btn mailbtn" title="Muat ulang data" onclick="refreshAll()"><i class="fas fa-rotate"></i></button>
-                    <button class="circle-btn" title="Aktivitas presensi hari ini" onclick="switchTab('dashboard'); scrollToActivity();">
-                        <i class="far fa-bell"></i><span class="ping" id="notifCount" style="display:none;">0</span>
-                    </button>
-                    <div class="who">
-                        <div class="top-user"><b id="userNama">-</b><small id="userEmail">-</small></div>
-                        <div class="top-avatar" id="topAvatar" title="Admin">A</div>
-                    </div>
-                </div>
-            </header>
+           <header class="top-bar">
+    <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <div class="input-field top-search">
+        <i class="fas fa-magnifying-glass"></i>
+        <input type="text" id="globalSearch" placeholder="Cari NIM / nama mahasiswa" oninput="handleGlobalSearch()">
+        <span class="kbd">Ctrl K</span>
+    </div>
+    <div class="top-bar-actions">
+        <button class="circle-btn mailbtn" title="Muat ulang data" onclick="refreshAll()"><i class="fas fa-rotate"></i></button>
+        <button class="circle-btn" title="Aktivitas presensi hari ini" onclick="switchTab('dashboard'); scrollToActivity();">
+            <i class="far fa-bell"></i><span class="ping" id="notifCount" style="display:none;">0</span>
+        </button>
+        <button id="themeToggle" type="button" aria-label="Ubah tema" class="circle-btn" title="Tema">
+            <i class="fas fa-moon"></i>
+        </button>
+        <div class="who">
+            <div class="top-user"><b id="userNama">-</b><small id="userEmail">-</small></div>
+            <div class="top-avatar" id="topAvatar" title="Admin">A</div>
+        </div>
+    </div>
+</header>
 
             <div class="content-panel">
             <div class="page-head">
@@ -554,6 +557,32 @@ body.admin-shell-page { padding: 0; }
                         <div class="card c-analytics">
                         <div class="card-head"><h3>Analitik Kehadiran</h3><span class="small-muted">Minggu ini</span></div>
                         <div class="caps" id="weekCaps"><div class="small-muted">Memuat...</div></div>
+                        <div class="mini-wave-card" aria-live="polite">
+                            <div class="mini-wave-head">
+                                <div>
+                                    <small>Tren Kehadiran</small>
+                                    <h4>Per Pertemuan</h4>
+                                </div>
+                                <span class="mini-wave-badge">Live</span>
+                            </div>
+                            <svg class="mini-wave-svg" viewBox="0 0 260 110" preserveAspectRatio="none" aria-label="Grafik tren kehadiran per pertemuan">
+                                <defs>
+                                    <linearGradient id="miniWaveFill" x1="0" x2="0" y1="0" y2="1">
+                                        <stop offset="0%" stop-color="rgba(33,122,82,0.14)" />
+                                        <stop offset="100%" stop-color="rgba(33,122,82,0.02)" />
+                                    </linearGradient>
+                                </defs>
+                                <g class="mini-wave-grid">
+                                    <line x1="0" y1="20" x2="260" y2="20"></line>
+                                    <line x1="0" y1="55" x2="260" y2="55"></line>
+                                    <line x1="0" y1="90" x2="260" y2="90"></line>
+                                </g>
+                                <path class="mini-wave-area" d=""></path>
+                                <path class="mini-wave-line" d=""></path>
+                                <g id="miniWavePoints"></g>
+                            </svg>
+                            <div class="mini-wave-legend" id="miniWaveLegend"><span>Memuat...</span></div>
+                        </div>
                     </div>
                         <div class="card c-remind">
                         <div class="card-head"><h3>Sesi Presensi</h3></div>
@@ -654,7 +683,30 @@ body.admin-shell-page { padding: 0; }
 
     <div class="chart-card" style="margin-bottom:20px;">
         <div class="chart-card-head"><span><i class="fas fa-chart-column"></i> Tren Kehadiran per Pertemuan</span></div>
-        <canvas id="statistikTrendChart" height="130"></canvas>
+        <div class="statistik-chart-wrap">
+            <svg id="statistikTrendSvg" viewBox="0 0 900 290" preserveAspectRatio="none" role="img" aria-label="Grafik tren kehadiran per pertemuan">
+                <defs>
+                    <linearGradient id="statistikTrendFill" x1="0" x2="0" y1="0" y2="1">
+                        <stop offset="0%" stop-color="rgba(33,122,82,0.14)" />
+                        <stop offset="100%" stop-color="rgba(33,122,82,0.02)" />
+                    </linearGradient>
+                </defs>
+                <g class="statistik-chart-grid">
+                    <line x1="50" y1="20" x2="880" y2="20"></line>
+                    <line x1="50" y1="125" x2="880" y2="125"></line>
+                    <line x1="50" y1="230" x2="880" y2="230"></line>
+                </g>
+                <g class="statistik-chart-y-labels">
+                    <text x="40" y="24" text-anchor="end">100%</text>
+                    <text x="40" y="129" text-anchor="end">50%</text>
+                    <text x="40" y="234" text-anchor="end">0%</text>
+                </g>
+                <path id="statistikTrendArea" class="statistik-chart-area"></path>
+                <path id="statistikTrendLine" class="statistik-chart-line"></path>
+                <g id="statistikTrendPoints"></g>
+                <g id="statistikTrendDates" class="statistik-chart-dates"></g>
+            </svg>
+        </div>
         <div class="chart-empty" id="statistikTrendEmpty" style="display:none;">Belum ada data presensi untuk ditampilkan.</div>
     </div>
 
