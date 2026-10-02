@@ -493,3 +493,36 @@ async function loadRiwayat() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+// ================================================================
+// TEMA GELAP / TERANG
+// ================================================================
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.classList.toggle('theme-dark');
+  localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('themeMode') || 'light';
+  const isDark = saved === 'dark';
+  document.body.classList.toggle('theme-dark', isDark);
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.addEventListener('click', toggleTheme);
+  }
+});
