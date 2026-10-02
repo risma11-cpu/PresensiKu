@@ -211,7 +211,7 @@ Semua endpoint lewat satu URL Web App. Aksi dikirim lewat parameter `action`.
 
 ## 👤 Pembuat
 
-**[Nama Kamu]** — [@username-github](https://github.com/username-github)
+**[Rismatur Rahmi]** — [@risma11-cpu-github](https://github.com/risma11-cpu-github)
 
 ## 📄 Lisensi
 
