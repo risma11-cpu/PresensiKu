@@ -468,16 +468,19 @@ body.admin-shell-page { padding: 0; }
 
     <main class="main-panel">
         <header class="top-bar">
-            <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-            <div class="input-field top-search" style="visibility:hidden;"></div>
-            <div class="top-bar-actions">
-                <button class="circle-btn mailbtn" title="Muat ulang" onclick="location.reload()"><i class="fas fa-rotate"></i></button>
-                <div class="who">
-                    <div class="top-user"><b id="userNama">-</b><small id="userEmail">-</small></div>
-                    <div class="top-avatar" id="topAvatar">M</div>
-                </div>
-            </div>
-        </header>
+    <button class="hamburger-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+    <div class="input-field top-search" style="visibility:hidden;"></div>
+    <div class="top-bar-actions">
+        <button class="circle-btn mailbtn" title="Muat ulang" onclick="location.reload()"><i class="fas fa-rotate"></i></button>
+        <button id="themeToggle" type="button" aria-label="Ubah tema" class="circle-btn">
+          <i class="fas fa-moon"></i>
+        </button>
+        <div class="who">
+            <div class="top-user"><b id="userNama">-</b><small id="userEmail">-</small></div>
+            <div class="top-avatar" id="topAvatar">M</div>
+        </div>
+    </div>
+</header>
 
         <div class="content-panel">
             <div class="page-head">
