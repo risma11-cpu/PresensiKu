@@ -15,8 +15,7 @@ const AState = {
 
 const ACharts = {
     trend: null,
-    donut: null,
-    statistikTrend: null
+    donut: null
 };
 
 const ADOM = {
@@ -224,7 +223,7 @@ async function renderSesiCard() {
     }
 
     const qrText = JSON.stringify({ sesiId: sesi.sesiId });
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(qrText)}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&qzone=4&color=000000&bgcolor=ffffff&data=${encodeURIComponent(sesi.sesiId)}`;
 
     ADOM.sesiCard.className = 'sesi-card aktif';
     ADOM.sesiCard.innerHTML = `
@@ -567,8 +566,8 @@ function initCharts() {
             data: { labels: [], datasets: [{
                 label: '% Kehadiran',
                 data: [],
-                borderColor: 'hsl(217, 91%, 60%)',
-                backgroundColor: 'hsla(217, 91%, 60%, 0.12)',
+                borderColor: '#1d7a50',
+                backgroundColor: 'rgba(33, 122, 82, 0.12)',
                 tension: 0.35,
                 fill: true,
                 pointRadius: 3
@@ -601,24 +600,6 @@ function initCharts() {
         });
     }
 
-    const statistikTrendCtx = document.getElementById('statistikTrendChart');
-    if (statistikTrendCtx) {
-        ACharts.statistikTrend = new Chart(statistikTrendCtx, {
-            type: 'bar',
-            data: { labels: [], datasets: [{
-                label: '% Kehadiran',
-                data: [],
-                backgroundColor: 'hsl(217, 91%, 60%)',
-                borderRadius: 6,
-                maxBarThickness: 34
-            }] },
-            options: {
-                responsive: true,
-                plugins: { legend: { display: false } },
-                scales: { y: { min: 0, max: 100, ticks: { callback: v => v + '%' } } }
-            }
-        });
-    }
 }
 
 function updateDonutChart(hadir, belum) {
@@ -643,15 +624,12 @@ async function loadTrendChart() {
         const result = await apiGetAuth('get_all_attendance');
         if (!result.success) throw new Error(result.message || 'Gagal memuat tren');
         const rows = result.data || [];
-        renderDashExtras(rows);
+        const trendData = getAttendanceTrend(rows, 15);
+        renderDashExtras(rows, trendData);
 
         if (!ACharts.trend) return;
-        const totalMhs = AState.mahasiswaData.length;
-        if (rows.length === 0 || totalMhs === 0) return;
-        const perTanggal = groupByTanggal(rows);
-        const tanggalList = Object.keys(perTanggal).sort().slice(-10);
-        ACharts.trend.data.labels = tanggalList;
-        ACharts.trend.data.datasets[0].data = tanggalList.map(t => Math.round((perTanggal[t].size / totalMhs) * 100));
+        ACharts.trend.data.labels = trendData.labels;
+        ACharts.trend.data.datasets[0].data = trendData.values;
         ACharts.trend.update();
     } catch (error) {
         console.warn('Gagal memuat tren kehadiran:', error.message);
@@ -668,10 +646,46 @@ function groupByTanggal(rows) {
     return per;
 }
 
+function getAttendanceTrend(rows, limit = 15) {
+    const totalMhs = AState.mahasiswaData.length;
+    if (!totalMhs) return { labels: [], values: [] };
+
+    const perTanggal = groupByTanggal(rows);
+    const labels = Object.keys(perTanggal).sort().slice(-limit);
+    return {
+        labels,
+        values: labels.map(tanggal => (perTanggal[tanggal].size / totalMhs) * 100)
+    };
+}
+
+function getTrendLabelIndexes(length, maxLabels = 5) {
+    const count = Math.min(maxLabels, length);
+    if (!count) return [];
+    return Array.from({ length: count }, (_, index) =>
+        Math.round(index * (length - 1) / Math.max(1, count - 1))
+    );
+}
+
+function createSmoothTrendPath(points) {
+    if (!points.length) return '';
+    let path = `M ${points[0].x} ${points[0].y}`;
+    for (let index = 0; index < points.length - 1; index++) {
+        const current = points[index];
+        const next = points[index + 1];
+        const previous = points[index - 1] || current;
+        const following = points[index + 2] || next;
+        const dx = next.x - current.x;
+        const controlOneY = current.y + (next.y - previous.y) / 6;
+        const controlTwoY = next.y - (following.y - current.y) / 6;
+        path += ` C ${current.x + dx / 3} ${controlOneY}, ${next.x - dx / 3} ${controlTwoY}, ${next.x} ${next.y}`;
+    }
+    return path;
+}
+
 // ================================================================
 // WIDGET DASHBOARD BARU — kapsul mingguan & daftar pertemuan
 // ================================================================
-function renderDashExtras(rows) {
+function renderDashExtras(rows, trendData = getAttendanceTrend(rows, 15)) {
     const totalMhs = AState.mahasiswaData.length;
     const per = groupByTanggal(rows);
 
@@ -697,6 +711,8 @@ function renderDashExtras(rows) {
                 <small>${d.h}</small></div>`;
         }).join('');
     }
+
+    renderMiniTrend(trendData.labels, trendData.values);
 
     // Daftar pertemuan terakhir
     const pl = document.getElementById('pertemuanList');
@@ -747,6 +763,91 @@ function refreshAll() {
     showStatus('Memuat ulang data...', 'info');
     Promise.all([loadStats(), loadActiveSesi(), loadMahasiswa(), loadRiwayatPresensi()])
         .then(() => { loadRekapKehadiran(); loadTrendChart(); loadStatistik(); showStatus('Data diperbarui', 'success'); });
+}
+
+function toggleTheme() {
+    const body = document.body;
+    const isDark = body.classList.toggle('theme-dark');
+    localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
+
+    const btn = document.getElementById('themeToggle');
+    if (btn) {
+        btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+}
+
+function initTheme() {
+    const saved = localStorage.getItem('themeMode') || 'light';
+    const isDark = saved === 'dark';
+    document.body.classList.toggle('theme-dark', isDark);
+
+    const btn = document.getElementById('themeToggle');
+    if (btn) {
+        btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
+    const btn = document.getElementById('themeToggle');
+    if (btn) {
+        btn.addEventListener('click', toggleTheme);
+    }
+});
+
+function renderMiniTrend(labels, values) {
+    const svg = document.querySelector('.mini-wave-svg');
+    if (!svg) return;
+
+    const line = svg.querySelector('.mini-wave-line');
+    const area = svg.querySelector('.mini-wave-area');
+    const pointsGroup = document.getElementById('miniWavePoints');
+    const legend = document.getElementById('miniWaveLegend');
+    if (!line || !area) return;
+
+    if (!values.length) {
+        line.setAttribute('d', '');
+        area.setAttribute('d', '');
+        if (pointsGroup) pointsGroup.replaceChildren();
+        if (legend) legend.textContent = 'Belum ada data';
+        return;
+    }
+
+    const w = 260;
+    const left = 0;
+    const right = w;
+    const top = 20;
+    const bottom = 90;
+
+    const points = values.map((value, index) => ({
+        x: values.length === 1 ? w / 2 : left + (index / (values.length - 1)) * (right - left),
+        y: bottom - (Math.max(0, Math.min(100, value)) / 100) * (bottom - top)
+    }));
+
+    const linePath = createSmoothTrendPath(points);
+    const fillPath = `${linePath} L ${points[points.length - 1].x} 100 L ${points[0].x} 100 Z`;
+
+    line.setAttribute('d', linePath);
+    area.setAttribute('d', fillPath);
+    if (pointsGroup) {
+        const svgNS = 'http://www.w3.org/2000/svg';
+        pointsGroup.replaceChildren(...points.map(point => {
+            const circle = document.createElementNS(svgNS, 'circle');
+            circle.setAttribute('cx', point.x);
+            circle.setAttribute('cy', point.y);
+            circle.setAttribute('r', '1.5');
+            return circle;
+        }));
+    }
+
+    if (legend) {
+        const indexes = getTrendLabelIndexes(labels.length);
+        legend.replaceChildren(...indexes.map(index => {
+            const label = document.createElement('span');
+            label.textContent = labels[index];
+            return label;
+        }));
+    }
 }
 
 function exportRekapCSV() {
@@ -805,8 +906,8 @@ async function loadStatistik() {
 
         if (totalPertemuan === 0 || totalMhs === 0) {
             if (ADOM.statistikTrendEmpty) ADOM.statistikTrendEmpty.style.display = 'block';
-            const canvasEl = document.getElementById('statistikTrendChart');
-            if (canvasEl) canvasEl.style.display = 'none';
+            const trendWrap = document.querySelector('.statistik-chart-wrap');
+            if (trendWrap) trendWrap.style.display = 'none';
             if (ADOM.statRataKehadiran) ADOM.statRataKehadiran.textContent = '0%';
             if (ADOM.statistikLoading) {
                 ADOM.statistikLoading.innerHTML = '<i class="fas fa-inbox state-icon"></i>Belum ada data presensi';
@@ -816,17 +917,11 @@ async function loadStatistik() {
             return;
         }
 
-        // Chart tren per pertemuan (bar), tampilkan 15 pertemuan terakhir
-        const shownTanggal = tanggalList.slice(-15);
-        const dataPersen = shownTanggal.map(t => Math.round((perTanggal[t].size / totalMhs) * 100));
-        if (ACharts.statistikTrend) {
-            ACharts.statistikTrend.data.labels = shownTanggal;
-            ACharts.statistikTrend.data.datasets[0].data = dataPersen;
-            ACharts.statistikTrend.update();
-        }
+        const trendData = getAttendanceTrend(rows, 15);
+        renderStatistikTrend(trendData.labels, trendData.values);
         if (ADOM.statistikTrendEmpty) ADOM.statistikTrendEmpty.style.display = 'none';
-        const canvasEl2 = document.getElementById('statistikTrendChart');
-        if (canvasEl2) canvasEl2.style.display = 'block';
+        const trendWrap = document.querySelector('.statistik-chart-wrap');
+        if (trendWrap) trendWrap.style.display = 'block';
 
         // Rata-rata kehadiran keseluruhan (rata-rata persentase antar pertemuan)
         const allPersen = tanggalList.map(t => (perTanggal[t].size / totalMhs) * 100);
@@ -877,3 +972,83 @@ async function loadStatistik() {
         }
     }
 }
+
+function renderStatistikTrend(labels, values) {
+    const svg = document.getElementById('statistikTrendSvg');
+    const area = document.getElementById('statistikTrendArea');
+    const line = document.getElementById('statistikTrendLine');
+    const pointsGroup = document.getElementById('statistikTrendPoints');
+    const datesGroup = document.getElementById('statistikTrendDates');
+    if (!svg || !area || !line || !pointsGroup || !datesGroup || !values.length) return;
+
+    const left = 50;
+    const right = 880;
+    const top = 20;
+    const bottom = 230;
+    const points = values.map((value, index) => ({
+        x: values.length === 1 ? (left + right) / 2 : left + (index / (values.length - 1)) * (right - left),
+        y: bottom - (Math.max(0, Math.min(100, value)) / 100) * (bottom - top),
+        value: Math.max(0, Math.min(100, value)),
+        label: labels[index]
+    }));
+
+    const linePath = createSmoothTrendPath(points);
+
+    line.setAttribute('d', linePath);
+    area.setAttribute('d', `${linePath} L ${points[points.length - 1].x} ${bottom} L ${points[0].x} ${bottom} Z`);
+
+    const svgNS = 'http://www.w3.org/2000/svg';
+    pointsGroup.replaceChildren(...points.map(point => {
+        const circle = document.createElementNS(svgNS, 'circle');
+        circle.setAttribute('cx', point.x);
+        circle.setAttribute('cy', point.y);
+        circle.setAttribute('r', '4');
+        const title = document.createElementNS(svgNS, 'title');
+        title.textContent = `${point.label}: ${point.value.toFixed(1)}%`;
+        circle.appendChild(title);
+        return circle;
+    }));
+
+    const labelIndexes = getTrendLabelIndexes(points.length);
+    datesGroup.replaceChildren(...labelIndexes.map(index => {
+        const text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', points[index].x);
+        text.setAttribute('y', '270');
+        text.setAttribute('text-anchor', index === 0 ? 'start' : (index === points.length - 1 ? 'end' : 'middle'));
+        text.textContent = points[index].label;
+        return text;
+    }));
+}
+// ================================================================
+// TEMA GELAP / TERANG
+// ================================================================
+function toggleTheme() {
+  const body = document.body;
+  const isDark = body.classList.toggle('theme-dark');
+  localStorage.setItem('themeMode', isDark ? 'dark' : 'light');
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  }
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('themeMode') || 'light';
+  const isDark = saved === 'dark';
+  document.body.classList.toggle('theme-dark', isDark);
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+
+  const btn = document.getElementById('themeToggle');
+  if (btn) {
+    btn.addEventListener('click', toggleTheme);
+  }
+});
